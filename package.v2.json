@@ -1,7 +1,7 @@
 {
   "autoTransfer": {
     "name": "autoTransfer",
-    "description": "定期整理文件",
+    "description": "类似v1的目录监控，可定期整理文件",
     "labels": "autoTransfer",
     "version": "1.0.0",
     "icon": "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/refs/heads/main/icons/filebox.png",

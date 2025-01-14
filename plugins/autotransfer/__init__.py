@@ -64,7 +64,7 @@ class autoTransfer(_PluginBase):
     # 插件名称
     plugin_name = "autoTransfer"
     # 插件描述
-    plugin_desc = "定期整理文件"
+    plugin_desc = "类似v1的目录监控，可定期整理文件"
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/refs/heads/main/icons/filebox.png"
     # 插件版本
@@ -761,7 +761,7 @@ class autoTransfer(_PluginBase):
             return [
                 {
                     "id": "autoTransfer",
-                    "name": "定期整理文件",
+                    "name": "类似v1的目录监控，可定期整理文件",
                     "trigger": CronTrigger.from_crontab(self._cron),
                     "func": self.transfer_all,
                     "kwargs": {},
