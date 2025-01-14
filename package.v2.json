@@ -1,0 +1,14 @@
+{
+  "autoTransfer": {
+    "name": "autoTransfer",
+    "description": "定期整理文件",
+    "labels": "autoTransfer",
+    "version": "1.0.0",
+    "icon": "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/refs/heads/main/icons/filebox.png",
+    "author": "Dean",
+    "level": 1,
+    "history": {
+      "v1.0.0": "autoTransfer"
+    }
+  }
+}
