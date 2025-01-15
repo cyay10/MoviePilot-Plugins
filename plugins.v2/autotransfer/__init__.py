@@ -25,39 +25,14 @@ from app.helper.directory import DirectoryHelper
 from app.log import logger
 from app.modules.filemanager import FileManagerModule
 from app.plugins import _PluginBase
-from app.schemas import NotificationType, TransferInfo, TransferDirectoryConf, FileItem
+from app.schemas import NotificationType, TransferInfo, TransferDirectoryConf
 from app.schemas.types import EventType, MediaType, SystemConfigKey
 from app.utils.string import StringUtils
 from app.utils.system import SystemUtils
+from app.helper.downloader import DownloaderHelper
+from app.schemas import NotificationType, WebhookEventInfo, ServiceInfo
 
 lock = threading.Lock()
-
-
-class FileMonitorHandler(FileSystemEventHandler):
-    """
-    目录监控响应类
-    """
-
-    def __init__(self, monpath: str, sync: Any, **kwargs):
-        super(FileMonitorHandler, self).__init__(**kwargs)
-        self._watch_path = monpath
-        self.sync = sync
-
-    def on_created(self, event):
-        self.sync.event_handler(
-            event=event,
-            text="创建",
-            mon_path=self._watch_path,
-            event_path=event.src_path,
-        )
-
-    def on_moved(self, event):
-        self.sync.event_handler(
-            event=event,
-            text="移动",
-            mon_path=self._watch_path,
-            event_path=event.dest_path,
-        )
 
 
 class autoTransfer(_PluginBase):
@@ -68,7 +43,7 @@ class autoTransfer(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/refs/heads/main/icons/filebox.png"
     # 插件版本
-    plugin_version = "1.0.4"
+    plugin_version = "1.0.5"
     # 插件作者
     plugin_author = "Dean"
     # 作者主页
@@ -98,6 +73,7 @@ class autoTransfer(_PluginBase):
     _softlink = False
     _strm = False
     _del_empty_dir = False
+    _downloaderSpeedLimit = 0
     _cron = None
     filetransfer = None
     mediaChain = None
@@ -105,7 +81,7 @@ class autoTransfer(_PluginBase):
     # 模式 compatibility/fast
     _mode = "compatibility"
     # 转移方式
-    _transfer_type = "softlink"
+    _transfer_type = "move"
     _monitor_dirs = ""
     _exclude_keywords = ""
     _interval: int = 10
@@ -126,6 +102,7 @@ class autoTransfer(_PluginBase):
         self.mediaChain = MediaChain()
         self.storagechain = StorageChain()
         self.filetransfer = FileManagerModule()
+        self.downloader_helper = DownloaderHelper()
         # 清空配置
         self._dirconf = {}
         self._transferconf = {}
@@ -145,11 +122,13 @@ class autoTransfer(_PluginBase):
             self._monitor_dirs = config.get("monitor_dirs") or ""
             self._exclude_keywords = config.get("exclude_keywords") or ""
             self._interval = config.get("interval") or 10
-            self._cron = config.get("cron")
+            self._cron = config.get("cron") or "*/10 * * * *"
             self._size = config.get("size") or 0
             self._softlink = config.get("softlink")
             self._strm = config.get("strm")
-            self._del_empty_dir = config.get("del_empty_dir")
+            self._del_empty_dir = config.get("del_empty_dir") or False
+            self._downloaderSpeedLimit = config.get("downloaderSpeedLimit") or 0
+            self._downloaders = config.get("downloaders") or ["不限速-autoTransfer"]
 
         # 停止现有任务
         self.stop_service()
@@ -262,31 +241,82 @@ class autoTransfer(_PluginBase):
                 "category": self._category,
                 "size": self._size,
                 "refresh": self._refresh,
+                "cron": self._cron,
                 "del_empty_dir": self._del_empty_dir,
+                "downloaderSpeedLimit": self._downloaderSpeedLimit,
+                "downloaders": self._downloaders,
             }
         )
 
-    @eventmanager.register(EventType.PluginAction)
-    def remote_sync(self, event: Event):
+    @property
+    def service_info(self) -> Optional[ServiceInfo]:
         """
-        远程全量同步
+        服务信息
         """
-        if event:
-            event_data = event.event_data
-            if not event_data or event_data.get("action") != "autoTransfer_sync":
-                return
+        if not self._downloaders:
+            logger.warning("尚未配置下载器，请检查配置")
+            return None
+
+        services = self.downloader_helper.get_services(name_filters=self._downloaders)
+
+        if not services:
+            logger.warning("获取下载器实例失败，请检查配置")
+            return None
+
+        active_services = {}
+        for service_name, service_info in services.items():
+            if service_info.instance.is_inactive():
+                logger.warning(f"下载器 {service_name} 未连接，请检查配置")
+            elif not self.check_is_qb(service_info):
+                logger.warning(
+                    f"不支持的下载器类型 {service_name}，仅支持QB，请检查配置"
+                )
+            else:
+                active_services[service_name] = service_info
+
+        if not active_services:
+            logger.warning("没有已连接的下载器，请检查配置")
+            return None
+
+        return active_services
+
+    def set_download_limit(self, download_limit):
+
+        if not download_limit or not download_limit.isdigit():
             self.post_message(
-                channel=event.event_data.get("channel"),
-                title="开始同步云盘实时监控目录 ...",
-                userid=event.event_data.get("user"),
+                mtype=NotificationType.SiteMessage,
+                title="autoTransfer QB限速失败",
+                text="download_limit不是一个数值",
             )
-        self.transfer_all()
-        if event:
-            self.post_message(
-                channel=event.event_data.get("channel"),
-                title="云盘实时监控目录同步完成！",
-                userid=event.event_data.get("user"),
+            return False
+
+        flag = True
+        for service in self.service_info.values():
+            downloader_name = service.name
+            downloader_obj = service.instance
+            if not downloader_obj:
+                logger.error(f"获取下载器失败 {downloader_name}")
+                continue
+            _, upload_limit_current_val = downloader_obj.get_speed_limit()
+            flag = flag and downloader_obj.set_speed_limit(
+                download_limit=int(download_limit),
+                upload_limit=int(upload_limit_current_val),
             )
+        return flag
+
+    def check_is_qb(self, service_info) -> bool:
+        """
+        检查下载器类型是否为 qbittorrent 或 transmission
+        """
+        if self.downloader_helper.is_downloader(
+            service_type="qbittorrent", service=service_info
+        ):
+            return True
+        elif self.downloader_helper.is_downloader(
+            service_type="transmission", service=service_info
+        ):
+            return False
+        return False
 
     def transfer_all(self):
         pass
@@ -484,6 +514,41 @@ class autoTransfer(_PluginBase):
                     logger.error(f"未配置源目录 {mon_path} 的目的目录")
                     return
 
+                # 下载器限速
+                is_download_speed_limited = False
+                if (
+                    target_dir.transfer_type
+                    in [
+                        "move",
+                        "copy",
+                        "rclone_copy",
+                        "rclone_move",
+                    ]
+                    and "不限速-autoTransfer" not in self._downloaders
+                    and self._downloaderSpeedLimit != 0
+                ):
+                    logger.info(
+                        f"正在移动或复制文件{file_item.path}, 设置qBittorrent({', '.join(self._downloaders)})下载限速为: {self._downloaderSpeedLimit} KiB/s"
+                    )
+                    is_download_speed_limited = self.set_download_limit(
+                        self._downloaderSpeedLimit
+                    )
+                    if not is_download_speed_limited:
+                        logger.error("设置qBittorrent限速失败")
+                else:
+                    if "不限速-autoTransfer" in self._downloaders:
+                        log_msg = "已勾选'不限速'或勾选需限速的下载器，默认关闭限速"
+                    elif self._downloaderSpeedLimit == 0:
+                        log_msg = "下载速度限制为0或为空，默认关闭限速"
+                    elif target_dir.transfer_type not in [
+                        "move",
+                        "copy",
+                        "rclone_copy",
+                        "rclone_move",
+                    ]:
+                        log_msg = "转移方式不是移动或复制，下载器限速默认关闭"
+                    logger.info(log_msg)
+
                 # 转移文件
                 transferinfo: TransferInfo = self.chain.transfer(
                     fileitem=file_item,
@@ -492,6 +557,12 @@ class autoTransfer(_PluginBase):
                     target_directory=target_dir,
                     episodes_info=episodes_info,
                 )
+                # 取消限速
+                if is_download_speed_limited:
+                    self.set_download_limit("0")
+                    logger.info(
+                        f"移动或复制文件{file_item.path}完成，取消qBittorrent限速"
+                    )
 
                 if not transferinfo:
                     logger.error("文件转移模块运行失败")
@@ -724,30 +795,10 @@ class autoTransfer(_PluginBase):
 
     @staticmethod
     def get_command() -> List[Dict[str, Any]]:
-        """
-        定义远程控制命令
-        :return: 命令关键字、事件、描述、附带数据
-        """
-        return [
-            {
-                "cmd": "/autoTransfer_sync",
-                "event": EventType.PluginAction,
-                "desc": "autoTransfer同步",
-                "category": "",
-                "data": {"action": "autoTransfer_sync"},
-            }
-        ]
+        pass
 
     def get_api(self) -> List[Dict[str, Any]]:
-        return [
-            {
-                "path": "/autoTransfer_sync",
-                "endpoint": self.sync,
-                "methods": ["GET"],
-                "summary": "autoTransfer同步",
-                "description": "autoTransfer同步",
-            }
-        ]
+        pass
 
     def get_service(self) -> List[Dict[str, Any]]:
         """
@@ -760,7 +811,7 @@ class autoTransfer(_PluginBase):
             "kwargs": {} # 定时器参数
         }]
         """
-        if self._enabled and self._cron:
+        if self._enabled:
             return [
                 {
                     "id": "autoTransfer",
@@ -949,6 +1000,21 @@ class autoTransfer(_PluginBase):
                         "content": [
                             {
                                 "component": "VCol",
+                                "props": {"cols": 12},
+                                "content": [
+                                    {
+                                        "component": "VCol",
+                                        "props": {"cols": 12},
+                                        "content": [
+                                            {
+                                                "component": "VProgressLinear",
+                                            }
+                                        ],
+                                    }
+                                ],
+                            },
+                            {
+                                "component": "VCol",
                                 "props": {"cols": 3, "md": 3},
                                 "content": [
                                     {
@@ -1022,6 +1088,85 @@ class autoTransfer(_PluginBase):
                                             "label": "入库消息延迟",
                                             "placeholder": "10",
                                         },
+                                    }
+                                ],
+                            },
+                        ],
+                    },
+                    {
+                        "component": "VRow",
+                        "content": [
+                            {
+                                "component": "VCol",
+                                "props": {"cols": 12},
+                                "content": [
+                                    {
+                                        "component": "VCol",
+                                        "props": {"cols": 12},
+                                        "content": [
+                                            {
+                                                "component": "VProgressLinear",
+                                            }
+                                        ],
+                                    }
+                                ],
+                            },
+                            {
+                                "component": "VCol",
+                                "props": {"cols": 12, "md": 4},
+                                "content": [
+                                    {
+                                        "component": "VSelect",
+                                        "props": {
+                                            "multiple": True,
+                                            "chips": True,
+                                            "clearable": True,
+                                            "model": "downloaders",
+                                            "label": "选择转移时要限速的下载器",
+                                            "items": [
+                                                {
+                                                    "title": "不限速(勾选此项或留空默认不限速)",
+                                                    "value": "不限速-autoTransfer",
+                                                },
+                                                *[
+                                                    {
+                                                        "title": config.name,
+                                                        "value": config.name,
+                                                    }
+                                                    for config in self.downloader_helper.get_configs().values()
+                                                    if config.type == "qbittorrent"
+                                                ],
+                                            ],
+                                        },
+                                    }
+                                ],
+                            },
+                            {
+                                "component": "VCol",
+                                "props": {"cols": 3, "md": 3},
+                                "content": [
+                                    {
+                                        "component": "VTextField",
+                                        "props": {
+                                            "model": "downloaderSpeedLimit",
+                                            "label": "转移时下载器限速(KiB/s)",
+                                            "placeholder": "0或留空不限速",
+                                        },
+                                    }
+                                ],
+                            },
+                            {
+                                "component": "VCol",
+                                "props": {"cols": 12},
+                                "content": [
+                                    {
+                                        "component": "VCol",
+                                        "props": {"cols": 12},
+                                        "content": [
+                                            {
+                                                "component": "VProgressLinear",
+                                            }
+                                        ],
                                     }
                                 ],
                             },
@@ -1176,6 +1321,8 @@ class autoTransfer(_PluginBase):
             "cron": "*/10 * * * *",
             "size": 0,
             "del_empty_dir": False,
+            "downloaderSpeedLimit": 0,
+            "downloaders": "不限速",
         }
 
     def get_page(self) -> List[dict]:
@@ -1185,14 +1332,6 @@ class autoTransfer(_PluginBase):
         """
         退出插件
         """
-        # if self._observer:
-        #     for observer in self._observer:
-        #         try:
-        #             observer.stop()
-        #             observer.join()
-        #         except Exception as e:
-        #             print(str(e))
-        # self._observer = []
         if self._scheduler:
             self._scheduler.remove_all_jobs()
             if self._scheduler.running:
