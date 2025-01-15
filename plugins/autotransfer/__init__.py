@@ -1064,7 +1064,7 @@ class autoTransfer(_PluginBase):
                                         "component": "VTextarea",
                                         "props": {
                                             "model": "exclude_keywords",
-                                            "label": "排除关键词",
+                                            "label": "排除关键词(正则, 区分大小写)",
                                             "rows": 1,
                                             "auto-grow": "{{ monitor_dirs.length > 0 }}",
                                             "placeholder": "每一行一个关键词",
@@ -1142,7 +1142,7 @@ class autoTransfer(_PluginBase):
                                         "props": {
                                             "type": "info",
                                             "variant": "tonal",
-                                            "text": "排除关键词推荐使用(Chrome和Firefox可直接复制，Safari直接复制会合并为1行，Safari需逐行复制):\nSpecial Ending Movie\n\\[((TV|BD|\\bBlu-ray\\b)?\\s*CM\\s*\\d{2,3})\\]\n\\[Teaser.*?\\]\n\\[PV.*?\\]\n\\[NC[OPED]+.*?\\]\n\\[S\\d+\\s+Recap(\\s+\\d+)?\\]\nMenu\nPreview\n\\b(CDs|SPs|Scans|Bonus|映像特典|特典CD|specials|Menu|Preview|/mv)\\b\n\\b(NC)?(Disc|SP|片头|OP|片尾|ED|PV|CM|MENU|EDPV|SongSpot|BDSpot)(\\d{0,2}|_ALL)\\b\nsample\n",
+                                            "text": "排除关键词推荐使用(Chrome和Firefox可直接复制，Safari直接复制会合并为1行，Safari需逐行复制):\nSpecial Ending Movie\n\\[((TV|BD|\\bBlu-ray\\b)?\\s*CM\\s*\\d{2,3})\\]\n\\[Teaser.*?\\]\n\\[PV.*?\\]\n\\[NC[OPED]+.*?\\]\n\\[S\\d+\\s+Recap(\\s+\\d+)?\\]\nMenu\nPreview\n\\b(CDs|SPs|Scans|Bonus|映像特典|特典CD|specials|Menu|Preview|/mv)\\b\n\\b(NC)?(Disc|SP|片头|OP|片尾|ED|PV|CM|MENU|EDPV|SongSpot|BDSpot)(\\d{0,2}|_ALL)\\b\n[Ss]ample\n",
                                             "style": {
                                                 "white-space": "pre-line",
                                                 "word-wrap": "break-word",
