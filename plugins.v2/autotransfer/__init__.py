@@ -735,16 +735,16 @@ class autoTransfer(_PluginBase):
             }
         ]
 
-    # def get_api(self) -> List[Dict[str, Any]]:
-    #     return [
-    #         {
-    #             "path": "/autoTransfer_sync",
-    #             "endpoint": self.sync,
-    #             "methods": ["GET"],
-    #             "summary": "autoTransfer同步",
-    #             "description": "autoTransfer同步",
-    #         }
-    #     ]
+    def get_api(self) -> List[Dict[str, Any]]:
+        return [
+            {
+                "path": "/autoTransfer_sync",
+                "endpoint": self.sync,
+                "methods": ["GET"],
+                "summary": "autoTransfer同步",
+                "description": "autoTransfer同步",
+            }
+        ]
 
     def get_service(self) -> List[Dict[str, Any]]:
         """
