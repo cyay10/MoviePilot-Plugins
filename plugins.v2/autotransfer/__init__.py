@@ -1019,6 +1019,7 @@ class autoTransfer(_PluginBase):
                                             "model": "monitor_dirs",
                                             "label": "监控目录(下载目录/源目录)",
                                             "rows": 6,
+                                            "auto-grow": "{{ monitor_dirs.length > 0 }}",
                                             "placeholder": "每一行一个目录，支持以下几种配置方式，转移方式支持 move、copy、link、softlink、rclone_copy、rclone_move：\n"
                                             "监控目录:转移目的目录\n"
                                             "监控目录:转移目的目录#转移方式\n"
@@ -1043,7 +1044,8 @@ class autoTransfer(_PluginBase):
                                         "props": {
                                             "model": "exclude_keywords",
                                             "label": "排除关键词",
-                                            "rows": 2,
+                                            "rows": 1,
+                                            "auto-grow": "{{ monitor_dirs.length > 0 }}",
                                             "placeholder": "每一行一个关键词",
                                         },
                                     }

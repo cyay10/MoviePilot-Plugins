@@ -296,7 +296,7 @@ class autoTransfer(_PluginBase):
                 min_filesize=self._size,
                 recursive=True,
             )
-            logger.info(f"监控目录 {mon_path} 共发现 {len(list_files)} 个视频")
+            logger.info(f"源目录 {mon_path} 共发现 {len(list_files)} 个视频")
             # 遍历目录下所有文件
             for file_path in list_files:
                 logger.info(f"开始处理文件 {file_path} ...")
@@ -478,7 +478,7 @@ class autoTransfer(_PluginBase):
                     target_dir.scraping = self._scrape
 
                 if not target_dir.library_path:
-                    logger.error(f"未配置监控目录 {mon_path} 的目的目录")
+                    logger.error(f"未配置源目录 {mon_path} 的目的目录")
                     return
 
                 # 转移文件
@@ -1017,8 +1017,9 @@ class autoTransfer(_PluginBase):
                                         "component": "VTextarea",
                                         "props": {
                                             "model": "monitor_dirs",
-                                            "label": "监控目录",
+                                            "label": "监控目录(下载目录/源目录)",
                                             "rows": 6,
+                                            "auto-grow": "{{ monitor_dirs.length > 0 }}",
                                             "placeholder": "每一行一个目录，支持以下几种配置方式，转移方式支持 move、copy、link、softlink、rclone_copy、rclone_move：\n"
                                             "监控目录:转移目的目录\n"
                                             "监控目录:转移目的目录#转移方式\n"
@@ -1043,7 +1044,8 @@ class autoTransfer(_PluginBase):
                                         "props": {
                                             "model": "exclude_keywords",
                                             "label": "排除关键词",
-                                            "rows": 2,
+                                            "rows": 1,
+                                            "auto-grow": "{{ monitor_dirs.length > 0 }}",
                                             "placeholder": "每一行一个关键词",
                                         },
                                     }
@@ -1105,6 +1107,34 @@ class autoTransfer(_PluginBase):
                             }
                         ],
                     },
+                    {
+                        "component": "VRow",
+                        "content": [
+                            {
+                                "component": "VCol",
+                                "props": {
+                                    "cols": 12,
+                                },
+                                "content": [
+                                    {
+                                        "component": "VAlert",
+                                        "props": {
+                                            "type": "info",
+                                            "variant": "tonal",
+                                            "text": "排除关键词推荐使用:\nSpecial Ending Movie\n\\[((TV|BD|\\bBlu-ray\\b)?\\s*CM\\s*\\d{2,3})\\]\n\\[Teaser.*?\\]\n\\[PV.*?\\]\n\\[NC[OPED]+.*?\\]\n\\[S\\d+\\s+Recap(\\s+\\d+)?\\]\nMenu\nPreview\n\\b(CDs|SPs|Scans|Bonus|映像特典|特典CD|specials|Menu|Preview|/mv)\\b\n\\b(NC)?(Disc|SP|片头|OP|片尾|ED|PV|CM|MENU|EDPV|SongSpot|BDSpot)(\\d{0,2}|_ALL)\\b\nsample\n",
+                                            "style": {
+                                                "white-space": "pre-line",
+                                                "word-wrap": "break-word",
+                                                "height": "auto",
+                                                "max-height": "300px",
+                                                "overflow-y": "auto",
+                                            },
+                                        },
+                                    }
+                                ],
+                            }
+                        ],
+                    },
                 ],
             }
         ], {
@@ -1133,14 +1163,14 @@ class autoTransfer(_PluginBase):
         """
         退出插件
         """
-        if self._observer:
-            for observer in self._observer:
-                try:
-                    observer.stop()
-                    observer.join()
-                except Exception as e:
-                    print(str(e))
-        self._observer = []
+        # if self._observer:
+        #     for observer in self._observer:
+        #         try:
+        #             observer.stop()
+        #             observer.join()
+        #         except Exception as e:
+        #             print(str(e))
+        # self._observer = []
         if self._scheduler:
             self._scheduler.remove_all_jobs()
             if self._scheduler.running:
