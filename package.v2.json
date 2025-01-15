@@ -3,11 +3,12 @@
     "name": "autoTransfer",
     "description": "类似v1的目录监控，可定期整理文件",
     "labels": "autoTransfer",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "icon": "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/refs/heads/main/icons/filebox.png",
     "author": "Dean",
     "level": 1,
     "history": {
+      "v1.0.1": "autoTransfer",
       "v1.0.0": "autoTransfer"
     }
   }
