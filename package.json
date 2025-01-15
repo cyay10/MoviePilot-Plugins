@@ -3,11 +3,12 @@
         "name": "autoTransfer",
         "description": "此插件v1无用，仅作占位测试",
         "labels": "autoTransfer",
-        "version": "1.0.3",
+        "version": "1.0.4",
         "icon": "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/refs/heads/main/icons/filebox.png",
         "author": "Dean",
         "level": 1,
         "history": {
+            "v1.0.4": "增加删除空目录的开关",
             "v1.0.3": "使用VCronField代替VTextField",
             "v1.0.2": "VTextarea auto-grow",
             "v1.0.1": "init",

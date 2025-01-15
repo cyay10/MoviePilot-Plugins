@@ -68,7 +68,7 @@ class autoTransfer(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/refs/heads/main/icons/filebox.png"
     # 插件版本
-    plugin_version = "1.0.3"
+    plugin_version = "1.0.4"
     # 插件作者
     plugin_author = "Dean"
     # 作者主页
@@ -97,6 +97,7 @@ class autoTransfer(_PluginBase):
     _refresh = False
     _softlink = False
     _strm = False
+    _del_empty_dir = False
     _cron = None
     filetransfer = None
     mediaChain = None
@@ -148,6 +149,7 @@ class autoTransfer(_PluginBase):
             self._size = config.get("size") or 0
             self._softlink = config.get("softlink")
             self._strm = config.get("strm")
+            self._del_empty_dir = config.get("del_empty_dir")
 
         # 停止现有任务
         self.stop_service()
@@ -260,6 +262,7 @@ class autoTransfer(_PluginBase):
                 "category": self._category,
                 "size": self._size,
                 "refresh": self._refresh,
+                "del_empty_dir": self._del_empty_dir,
             }
         )
 
@@ -632,7 +635,7 @@ class autoTransfer(_PluginBase):
                     )
 
                 # 移动模式删除空目录
-                if transfer_type == "move":
+                if transfer_type == "move" and self._del_empty_dir:
                     for file_dir in file_path.parents:
                         if len(str(file_dir)) <= len(str(Path(mon_path))):
                             # 重要，删除到监控目录为止
@@ -782,50 +785,6 @@ class autoTransfer(_PluginBase):
                 "component": "VForm",
                 "content": [
                     {
-                        "component": "VRow",
-                        "content": [
-                            {
-                                "component": "VCol",
-                                "props": {"cols": 12, "md": 4},
-                                "content": [
-                                    {
-                                        "component": "VSwitch",
-                                        "props": {
-                                            "model": "enabled",
-                                            "label": "启用插件",
-                                        },
-                                    }
-                                ],
-                            },
-                            {
-                                "component": "VCol",
-                                "props": {"cols": 12, "md": 4},
-                                "content": [
-                                    {
-                                        "component": "VSwitch",
-                                        "props": {
-                                            "model": "notify",
-                                            "label": "发送通知",
-                                        },
-                                    }
-                                ],
-                            },
-                            {
-                                "component": "VCol",
-                                "props": {"cols": 12, "md": 4},
-                                "content": [
-                                    {
-                                        "component": "VSwitch",
-                                        "props": {
-                                            "model": "onlyonce",
-                                            "label": "立即运行一次",
-                                        },
-                                    }
-                                ],
-                            },
-                        ],
-                    },
-                    {
                         "component": "VForm",
                         "content": [
                             {
@@ -833,56 +792,33 @@ class autoTransfer(_PluginBase):
                                 "content": [
                                     {
                                         "component": "VCol",
-                                        "props": {"cols": 12, "md": 4},
+                                        "props": {"cols": 12, "md": 3},
                                         "content": [
                                             {
                                                 "component": "VSwitch",
                                                 "props": {
-                                                    "model": "history",
-                                                    "label": "存储历史记录",
+                                                    "model": "enabled",
+                                                    "label": "启用插件",
                                                 },
                                             }
                                         ],
                                     },
                                     {
                                         "component": "VCol",
-                                        "props": {"cols": 12, "md": 4},
+                                        "props": {"cols": 12, "md": 3},
                                         "content": [
                                             {
                                                 "component": "VSwitch",
                                                 "props": {
-                                                    "model": "scrape",
-                                                    "label": "是否刮削",
+                                                    "model": "notify",
+                                                    "label": "发送通知",
                                                 },
                                             }
                                         ],
                                     },
                                     {
                                         "component": "VCol",
-                                        "props": {"cols": 12, "md": 4},
-                                        "content": [
-                                            {
-                                                "component": "VSwitch",
-                                                "props": {
-                                                    "model": "category",
-                                                    "label": "是否二级分类",
-                                                },
-                                            }
-                                        ],
-                                    },
-                                ],
-                            }
-                        ],
-                    },
-                    {
-                        "component": "VForm",
-                        "content": [
-                            {
-                                "component": "VRow",
-                                "content": [
-                                    {
-                                        "component": "VCol",
-                                        "props": {"cols": 12, "md": 4},
+                                        "props": {"cols": 12, "md": 3},
                                         "content": [
                                             {
                                                 "component": "VSwitch",
@@ -893,34 +829,119 @@ class autoTransfer(_PluginBase):
                                             }
                                         ],
                                     },
-                                    {
-                                        "component": "VCol",
-                                        "props": {"cols": 12, "md": 4},
-                                        "content": [
-                                            {
-                                                "component": "VSwitch",
-                                                "props": {
-                                                    "model": "softlink",
-                                                    "label": "软连接",
-                                                },
-                                            }
-                                        ],
-                                    },
-                                    {
-                                        "component": "VCol",
-                                        "props": {"cols": 12, "md": 4},
-                                        "content": [
-                                            {
-                                                "component": "VSwitch",
-                                                "props": {
-                                                    "model": "strm",
-                                                    "label": "联动Strm生成",
-                                                },
-                                            }
-                                        ],
-                                    },
                                 ],
-                            }
+                            },
+                            {
+                                "component": "VForm",
+                                "content": [
+                                    {
+                                        "component": "VRow",
+                                        "content": [
+                                            {
+                                                "component": "VCol",
+                                                "props": {"cols": 12, "md": 3},
+                                                "content": [
+                                                    {
+                                                        "component": "VSwitch",
+                                                        "props": {
+                                                            "model": "history",
+                                                            "label": "存储历史记录",
+                                                        },
+                                                    }
+                                                ],
+                                            },
+                                            {
+                                                "component": "VCol",
+                                                "props": {"cols": 12, "md": 3},
+                                                "content": [
+                                                    {
+                                                        "component": "VSwitch",
+                                                        "props": {
+                                                            "model": "scrape",
+                                                            "label": "是否刮削",
+                                                        },
+                                                    }
+                                                ],
+                                            },
+                                            {
+                                                "component": "VCol",
+                                                "props": {"cols": 12, "md": 3},
+                                                "content": [
+                                                    {
+                                                        "component": "VSwitch",
+                                                        "props": {
+                                                            "model": "category",
+                                                            "label": "是否二级分类",
+                                                        },
+                                                    }
+                                                ],
+                                            },
+                                        ],
+                                    }
+                                ],
+                            },
+                            {
+                                "component": "VForm",
+                                "content": [
+                                    {
+                                        "component": "VRow",
+                                        "content": [
+                                            {
+                                                "component": "VCol",
+                                                "props": {"cols": 12, "md": 3},
+                                                "content": [
+                                                    {
+                                                        "component": "VSwitch",
+                                                        "props": {
+                                                            "model": "del_empty_dir",
+                                                            "label": "删除空目录",
+                                                        },
+                                                    }
+                                                ],
+                                            },
+                                            {
+                                                "component": "VCol",
+                                                "props": {"cols": 12, "md": 3},
+                                                "content": [
+                                                    {
+                                                        "component": "VSwitch",
+                                                        "props": {
+                                                            "model": "softlink",
+                                                            "label": "软连接",
+                                                        },
+                                                    }
+                                                ],
+                                            },
+                                            {
+                                                "component": "VCol",
+                                                "props": {"cols": 12, "md": 3},
+                                                "content": [
+                                                    {
+                                                        "component": "VSwitch",
+                                                        "props": {
+                                                            "model": "strm",
+                                                            "label": "联动Strm生成",
+                                                        },
+                                                    }
+                                                ],
+                                            },
+                                            {
+                                                "component": "VCol",
+                                                "props": {"cols": 12, "md": 3},
+                                                "content": [
+                                                    {
+                                                        "component": "VSwitch",
+                                                        "props": {
+                                                            "model": "onlyonce",
+                                                            "label": "立即运行一次",
+                                                        },
+                                                    }
+                                                ],
+                                            },
+                                        ],
+                                    }
+                                ],
+                            },
                         ],
                     },
                     {
@@ -1154,6 +1175,7 @@ class autoTransfer(_PluginBase):
             "interval": 10,
             "cron": "*/10 * * * *",
             "size": 0,
+            "del_empty_dir": False,
         }
 
     def get_page(self) -> List[dict]:
