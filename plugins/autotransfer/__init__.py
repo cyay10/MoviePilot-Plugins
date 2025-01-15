@@ -68,7 +68,7 @@ class autoTransfer(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/refs/heads/main/icons/filebox.png"
     # 插件版本
-    plugin_version = "1.0.2"
+    plugin_version = "1.0.3"
     # 插件作者
     plugin_author = "Dean"
     # 作者主页
@@ -931,7 +931,7 @@ class autoTransfer(_PluginBase):
                                 "props": {"cols": 3, "md": 3},
                                 "content": [
                                     {
-                                        "component": "VTextField",
+                                        "component": "VCronField",
                                         "props": {
                                             "model": "cron",
                                             "label": "执行周期",
