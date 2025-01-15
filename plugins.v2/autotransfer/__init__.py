@@ -296,7 +296,7 @@ class autoTransfer(_PluginBase):
                 min_filesize=self._size,
                 recursive=True,
             )
-            logger.info(f"监控目录 {mon_path} 共发现 {len(list_files)} 个视频")
+            logger.info(f"源目录 {mon_path} 共发现 {len(list_files)} 个视频")
             # 遍历目录下所有文件
             for file_path in list_files:
                 logger.info(f"开始处理文件 {file_path} ...")
@@ -478,7 +478,7 @@ class autoTransfer(_PluginBase):
                     target_dir.scraping = self._scrape
 
                 if not target_dir.library_path:
-                    logger.error(f"未配置监控目录 {mon_path} 的目的目录")
+                    logger.error(f"未配置源目录 {mon_path} 的目的目录")
                     return
 
                 # 转移文件
@@ -1017,7 +1017,7 @@ class autoTransfer(_PluginBase):
                                         "component": "VTextarea",
                                         "props": {
                                             "model": "monitor_dirs",
-                                            "label": "监控目录",
+                                            "label": "监控目录(下载目录/源目录)",
                                             "rows": 6,
                                             "placeholder": "每一行一个目录，支持以下几种配置方式，转移方式支持 move、copy、link、softlink、rclone_copy、rclone_move：\n"
                                             "监控目录:转移目的目录\n"
