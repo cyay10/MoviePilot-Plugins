@@ -8,7 +8,6 @@ from typing import List, Tuple, Dict, Any, Optional
 import pytz
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
-from watchdog.events import FileSystemEventHandler
 
 from app import schemas
 from app.chain.media import MediaChain
@@ -17,7 +16,6 @@ from app.chain.tmdb import TmdbChain
 from app.chain.transfer import TransferChain
 from app.core.config import settings
 from app.core.context import MediaInfo
-from app.core.event import eventmanager, Event
 from app.core.metainfo import MetaInfoPath
 from app.db.downloadhistory_oper import DownloadHistoryOper
 from app.db.transferhistory_oper import TransferHistoryOper
@@ -25,12 +23,16 @@ from app.helper.directory import DirectoryHelper
 from app.log import logger
 from app.modules.filemanager import FileManagerModule
 from app.plugins import _PluginBase
-from app.schemas import NotificationType, TransferInfo, TransferDirectoryConf
+from app.schemas import (
+    NotificationType,
+    TransferInfo,
+    TransferDirectoryConf,
+    ServiceInfo,
+)
 from app.schemas.types import EventType, MediaType, SystemConfigKey
 from app.utils.string import StringUtils
 from app.utils.system import SystemUtils
 from app.helper.downloader import DownloaderHelper
-from app.schemas import NotificationType, WebhookEventInfo, ServiceInfo
 
 lock = threading.Lock()
 
@@ -78,8 +80,6 @@ class autoTransfer(_PluginBase):
     filetransfer = None
     mediaChain = None
     _size = 0
-    # 模式 compatibility/fast
-    _mode = "compatibility"
     # 转移方式
     _transfer_type = "move"
     _monitor_dirs = ""
@@ -117,7 +117,6 @@ class autoTransfer(_PluginBase):
             self._scrape = config.get("scrape")
             self._category = config.get("category")
             self._refresh = config.get("refresh")
-            self._mode = config.get("mode")
             self._transfer_type = config.get("transfer_type")
             self._monitor_dirs = config.get("monitor_dirs") or ""
             self._exclude_keywords = config.get("exclude_keywords") or ""
@@ -229,7 +228,6 @@ class autoTransfer(_PluginBase):
                 "enabled": self._enabled,
                 "notify": self._notify,
                 "onlyonce": self._onlyonce,
-                "mode": self._mode,
                 "transfer_type": self._transfer_type,
                 "monitor_dirs": self._monitor_dirs,
                 "exclude_keywords": self._exclude_keywords,
@@ -326,7 +324,7 @@ class autoTransfer(_PluginBase):
             list_files = SystemUtils.list_files(
                 directory=Path(mon_path),
                 extensions=settings.RMT_MEDIAEXT,
-                min_filesize=self._size,
+                min_filesize=int(self._size),
                 recursive=True,
             )
             logger.info(f"源目录 {mon_path} 共发现 {len(list_files)} 个视频")
@@ -1032,17 +1030,11 @@ class autoTransfer(_PluginBase):
                                 "props": {"cols": 3, "md": 3},
                                 "content": [
                                     {
-                                        "component": "VSelect",
+                                        "component": "VTextField",
                                         "props": {
-                                            "model": "mode",
-                                            "label": "监控模式",
-                                            "items": [
-                                                {
-                                                    "title": "兼容模式",
-                                                    "value": "compatibility",
-                                                },
-                                                {"title": "性能模式", "value": "fast"},
-                                            ],
+                                            "model": "size",
+                                            "label": "最低整理大小, 默认0, 单位MiB",
+                                            "placeholder": "0",
                                         },
                                     }
                                 ],
@@ -1313,7 +1305,6 @@ class autoTransfer(_PluginBase):
             "refresh": True,
             "softlink": False,
             "strm": False,
-            "mode": "compatibility",
             "transfer_type": "move",
             "monitor_dirs": "",
             "exclude_keywords": "",
