@@ -526,7 +526,7 @@ class autoTransfer(_PluginBase):
                     and self._downloaderSpeedLimit != 0
                 ):
                     logger.info(
-                        f"正在移动或复制文件{file_item.path}, 设置qBittorrent({', '.join(self._downloaders)})下载限速为: {self._downloaderSpeedLimit} KiB/s"
+                        f"下载器限速 - {', '.join(self._downloaders)}，下载速度限制为 {self._downloaderSpeedLimit} KiB/s，因正在移动或复制文件{file_item.path}"
                     )
                     is_download_speed_limited = self.set_download_limit(
                         self._downloaderSpeedLimit
@@ -559,7 +559,7 @@ class autoTransfer(_PluginBase):
                 if is_download_speed_limited:
                     self.set_download_limit("0")
                     logger.info(
-                        f"移动或复制文件{file_item.path}完成，取消qBittorrent限速"
+                        f"取消下载器限速 - 因移动或复制文件{file_item.path}完成"
                     )
 
                 if not transferinfo:
