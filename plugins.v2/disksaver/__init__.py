@@ -29,7 +29,7 @@ class diskSaver(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/refs/heads/main/icons/disksaver.png"
     # 插件版本
-    plugin_version = "1.0.1"
+    plugin_version = "1.0.2"
     # 插件作者
     plugin_author = "Dean"
     # 作者主页
@@ -294,16 +294,18 @@ class diskSaver(_PluginBase):
                     download_limit_current_val, upload_limit_current_val = (
                         self.get_downloader_limit_current_val()
                     )
-                    if not str(download_limit_current_val) == str(
+                    # 现在的qb限速数值大于手动设置的数值才有必要限速，否则限速反而是提速了
+                    if str(download_limit_current_val) > str(
                         self._downloaderSpeedLimit
                     ):
                         # 下载器限速
                         self.set_download_limit(str(self._downloaderSpeedLimit))
-                        # 标记已限速(_dl_speed_limited)并更新_download_limit_old_val和_upload_limit_old_val
-                        self._dl_speed_limited = True
-                        self._download_limit_old_val = download_limit_current_val
-                        self._upload_limit_old_val = upload_limit_current_val
-                        self.__update_config()
+
+                    # 标记已限速(_dl_speed_limited)并更新_download_limit_old_val和_upload_limit_old_val
+                    self._dl_speed_limited = True
+                    self._download_limit_old_val = download_limit_current_val
+                    self._upload_limit_old_val = upload_limit_current_val
+                    self.__update_config()
                 elif (
                     available >= int(self._min_free_space) * (2**30)
                     and self._dl_speed_limited
@@ -315,13 +317,14 @@ class diskSaver(_PluginBase):
                     download_limit_current_val, upload_limit_current_val = (
                         self.get_downloader_limit_current_val()
                     )
-                    if str(download_limit_current_val) != str(
+                    # 现在的qb限速数值小于autoTransfer限速之前记录的数值才有必要恢复(提速)，否则提速反而是降(限)速了
+                    if str(download_limit_current_val) < str(
                         self._download_limit_old_val
                     ):
-                        # 取消限速(恢复原限速)
+                        # 下载器恢复原限速
                         self.set_download_limit(str(self._download_limit_old_val))
-                        self._dl_speed_limited = False
-                        self.__update_config()
+                    self._dl_speed_limited = False
+                    self.__update_config()
 
         except Exception as e:
             logger.error(
