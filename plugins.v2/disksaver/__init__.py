@@ -25,7 +25,7 @@ class diskSaver(_PluginBase):
     # 插件名称
     plugin_name = "diskSaver"
     # 插件描述
-    plugin_desc = "监控路径剩余空间，低于指定值时自动限制qb下载速度"
+    plugin_desc = "监控路径所在磁盘剩余空间，低于指定值时自动限制qb下载速度"
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/refs/heads/main/icons/disksaver.png"
     # 插件版本
@@ -366,7 +366,7 @@ class diskSaver(_PluginBase):
             return [
                 {
                     "id": "diskSaver",
-                    "name": "监控路径剩余空间，低于指定值时自动限制qb下载速度",
+                    "name": "监控路径所在磁盘剩余空间，低于指定值时自动限制qb下载速度",
                     "trigger": CronTrigger.from_crontab(self._cron),
                     "func": self.monitor_disk,
                     "kwargs": {},
@@ -575,7 +575,7 @@ class diskSaver(_PluginBase):
                                         "props": {
                                             "type": "info",
                                             "variant": "tonal",
-                                            "text": "监控路径剩余空间，低于指定值时自动限制qb下载速度",
+                                            "text": "监控路径所在磁盘剩余空间，低于指定值时自动限制qb下载速度",
                                             "style": {
                                                 "white-space": "pre-line",
                                                 "word-wrap": "break-word",
