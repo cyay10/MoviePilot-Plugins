@@ -9,7 +9,6 @@ import pytz
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 
-from app import schemas
 from app.chain.media import MediaChain
 from app.chain.storage import StorageChain
 from app.chain.tmdb import TmdbChain
@@ -279,28 +278,31 @@ class autoTransfer(_PluginBase):
         return active_services
 
     def set_download_limit(self, download_limit):
+        try:
+            if not download_limit or not download_limit.isdigit():
+                self.post_message(
+                    mtype=NotificationType.SiteMessage,
+                    title="autoTransfer QB限速失败",
+                    text="download_limit不是一个数值",
+                )
+                return False
 
-        if not download_limit or not download_limit.isdigit():
-            self.post_message(
-                mtype=NotificationType.SiteMessage,
-                title="autoTransfer QB限速失败",
-                text="download_limit不是一个数值",
-            )
+            flag = True
+            for service in self.service_info.values():
+                downloader_name = service.name
+                downloader_obj = service.instance
+                if not downloader_obj:
+                    logger.error(f"获取下载器失败 {downloader_name}")
+                    continue
+                _, upload_limit_current_val = downloader_obj.get_speed_limit()
+                flag = flag and downloader_obj.set_speed_limit(
+                    download_limit=int(download_limit),
+                    upload_limit=int(upload_limit_current_val),
+                )
+            return flag
+        except Exception as e:
+            logger.warn(f"设置下载限速失败 {str(e)}, traceback={traceback.format_exc()}")
             return False
-
-        flag = True
-        for service in self.service_info.values():
-            downloader_name = service.name
-            downloader_obj = service.instance
-            if not downloader_obj:
-                logger.error(f"获取下载器失败 {downloader_name}")
-                continue
-            _, upload_limit_current_val = downloader_obj.get_speed_limit()
-            flag = flag and downloader_obj.set_speed_limit(
-                download_limit=int(download_limit),
-                upload_limit=int(upload_limit_current_val),
-            )
-        return flag
 
     def check_is_qb(self, service_info) -> bool:
         """
@@ -540,19 +542,26 @@ class autoTransfer(_PluginBase):
                     logger.info(
                         f"下载器限速 - {', '.join(self._downloaders)}，下载速度限制为 {self._downloaderSpeedLimit} KiB/s，因正在移动或复制文件{file_item.path}"
                     )
-                    # 先获取当前下载器的限速
-                    download_limit_current_val, _ = (
-                        self.get_downloader_limit_current_val()
-                    )
-                    if str(download_limit_current_val) > str(
-                        self._downloaderSpeedLimit
-                    ):
-                        is_download_speed_limited = self.set_download_limit(
-                            self._downloaderSpeedLimit
+                    try:
+                        # 先获取当前下载器的限速
+                        download_limit_current_val, _ = (
+                            self.get_downloader_limit_current_val()
                         )
+                        if str(download_limit_current_val) > str(
+                            self._downloaderSpeedLimit
+                        ):
+                            is_download_speed_limited = self.set_download_limit(
+                                self._downloaderSpeedLimit
+                            )
+                    except Exception as e:
+                        logger.error(
+                            f"下载器限速失败，请检查下载器 {', '.join(self._downloaders)} 的联通性，本次整理将跳过下载器限速"
+                        )
+                        logger.debug(f"下载器限速失败：{str(e)}, traceback={traceback.format_exc()}")
+                        is_download_speed_limited = False
 
-                        if not is_download_speed_limited:
-                            logger.error("设置qBittorrent限速失败")
+                    if not is_download_speed_limited:
+                        logger.error("设置qBittorrent限速失败")
                 else:
                     if "不限速-autoTransfer" in self._downloaders:
                         log_msg = "已勾选'不限速'或勾选需限速的下载器，默认关闭限速"
