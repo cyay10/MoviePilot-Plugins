@@ -821,13 +821,6 @@ class autoTransfer(_PluginBase):
             ]
         return []
 
-    def sync(self) -> schemas.Response:
-        """
-        API调用目录同步
-        """
-        self.transfer_all()
-        return schemas.Response(success=True)
-
     def get_form(self) -> Tuple[List[dict], Dict[str, Any]]:
         return [
             {
