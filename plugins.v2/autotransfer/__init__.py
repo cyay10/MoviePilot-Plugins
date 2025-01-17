@@ -316,6 +316,18 @@ class autoTransfer(_PluginBase):
             return False
         return False
 
+    def get_downloader_limit_current_val(self):
+        for service in self.service_info.values():
+            downloader_name = service.name
+            downloader_obj = service.instance
+            if not downloader_obj:
+                logger.error(f"获取下载器失败 {downloader_name}")
+                continue
+            download_limit_current_val, upload_limit_current_val = (
+                downloader_obj.get_speed_limit()
+            )
+        return download_limit_current_val, upload_limit_current_val
+
     def transfer_all(self):
         pass
         # 遍历所有目录
@@ -528,11 +540,19 @@ class autoTransfer(_PluginBase):
                     logger.info(
                         f"下载器限速 - {', '.join(self._downloaders)}，下载速度限制为 {self._downloaderSpeedLimit} KiB/s，因正在移动或复制文件{file_item.path}"
                     )
-                    is_download_speed_limited = self.set_download_limit(
-                        self._downloaderSpeedLimit
+                    # 先获取当前下载器的限速
+                    download_limit_current_val, _ = (
+                        self.get_downloader_limit_current_val()
                     )
-                    if not is_download_speed_limited:
-                        logger.error("设置qBittorrent限速失败")
+                    if str(download_limit_current_val) > str(
+                        self._downloaderSpeedLimit
+                    ):
+                        is_download_speed_limited = self.set_download_limit(
+                            self._downloaderSpeedLimit
+                        )
+
+                        if not is_download_speed_limited:
+                            logger.error("设置qBittorrent限速失败")
                 else:
                     if "不限速-autoTransfer" in self._downloaders:
                         log_msg = "已勾选'不限速'或勾选需限速的下载器，默认关闭限速"
@@ -555,9 +575,9 @@ class autoTransfer(_PluginBase):
                     target_directory=target_dir,
                     episodes_info=episodes_info,
                 )
-                # 取消限速
+                # 恢复原速
                 if is_download_speed_limited:
-                    self.set_download_limit("0")
+                    self.set_download_limit(str(download_limit_current_val))
                     logger.info(
                         f"取消下载器限速 - 因移动或复制文件{file_item.path}完成"
                     )
