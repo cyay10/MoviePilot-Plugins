@@ -45,7 +45,7 @@ class autoTransfer(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/refs/heads/main/icons/filebox.png"
     # 插件版本
-    plugin_version = "1.0.6"
+    plugin_version = "0.0.1"
     # 插件作者
     plugin_author = "Dean"
     # 作者主页
