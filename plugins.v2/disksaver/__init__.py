@@ -29,7 +29,7 @@ class diskSaver(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/refs/heads/main/icons/disksaver.png"
     # 插件版本
-    plugin_version = "1.0.0"
+    plugin_version = "1.0.1"
     # 插件作者
     plugin_author = "Dean"
     # 作者主页
@@ -132,9 +132,9 @@ class diskSaver(_PluginBase):
 
             # 运行一次定时服务
             if self._onlyonce:
-                logger.info("disksaver整理文件，立即运行一次")
+                logger.info("diskSaver立即运行一次")
                 self._scheduler.add_job(
-                    name="disksaver整理文件",
+                    name="diskSaver手动运行",
                     func=self.monitor_disk,
                     trigger="date",
                     run_date=datetime.datetime.now(tz=pytz.timezone(settings.TZ))
@@ -267,7 +267,7 @@ class diskSaver(_PluginBase):
             for path in paths_to_process:
                 file_path = Path(path)
                 if not file_path.exists():
-                    logger.error(f"目录 {path} 不存在，请检查配置")
+                    logger.error(f"监控目录 {path} 不存在，请检查配置")
                     return
             logger.info(f"开始获取目录所在磁盘剩余空间 {paths_to_process} ...")
             # 全程加锁
@@ -315,9 +315,7 @@ class diskSaver(_PluginBase):
 
 
         except Exception as e:
-            logger.error("目录监控发生错误：%s - %s" % (str(e), traceback.format_exc()))
-        
-        logger.info("目录内所有文件整理完成！")
+            logger.error("diskSaver 监控出错：%s - %s" % (str(e), traceback.format_exc()))
 
 
     def usage(self, paths: List[Path]) -> Optional[schemas.StorageUsage]:

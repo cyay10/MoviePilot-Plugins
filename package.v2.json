@@ -20,13 +20,14 @@
   },
   "diskSaver": {
     "name": "diskSaver",
-    "description": "刚开始做，还不能用。监控指定路径的剩余空间，小于指定值自动限速qb下载速度",
+    "description": "监控路径剩余空间，低于指定值时自动限制qb下载速度",
     "labels": "diskSaver",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "icon": "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/refs/heads/main/icons/disksaver.png",
     "author": "Dean",
     "level": 1,
     "history": {
+      "v1.0.1": "基本能用",
       "v1.0.0": "init"
     }
   }
