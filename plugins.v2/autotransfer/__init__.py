@@ -1,6 +1,7 @@
 import datetime
 import re
 import shutil
+import os
 import threading
 import traceback
 from pathlib import Path
@@ -44,7 +45,7 @@ class autoTransfer(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/refs/heads/main/icons/autotransfer.png"
     # 插件版本
-    plugin_version = "1.0.7"
+    plugin_version = "1.0.8"
     # 插件作者
     plugin_author = "Dean"
     # 作者主页
@@ -75,6 +76,7 @@ class autoTransfer(_PluginBase):
     _strm = False
     _del_empty_dir = False
     _downloaderSpeedLimit = 0
+    _pathAfterMoveFailure = None
     _cron = None
     filetransfer = None
     mediaChain = None
@@ -125,6 +127,7 @@ class autoTransfer(_PluginBase):
             self._softlink = config.get("softlink")
             self._strm = config.get("strm")
             self._del_empty_dir = config.get("del_empty_dir") or False
+            self._pathAfterMoveFailure = config.get("pathAfterMoveFailure") or None
             self._downloaderSpeedLimit = config.get("downloaderSpeedLimit") or 0
             self._downloaders = config.get("downloaders") or ["不限速-autoTransfer"]
 
@@ -240,6 +243,7 @@ class autoTransfer(_PluginBase):
                 "refresh": self._refresh,
                 "cron": self._cron,
                 "del_empty_dir": self._del_empty_dir,
+                "pathAfterMoveFailure": self._pathAfterMoveFailure,
                 "downloaderSpeedLimit": self._downloaderSpeedLimit,
                 "downloaders": self._downloaders,
             }
@@ -319,6 +323,11 @@ class autoTransfer(_PluginBase):
         return False
 
     def get_downloader_limit_current_val(self):
+        """
+        获取下载器当前的下载限速和上传限速
+
+        :return: tuple of (download_limit_current_val, upload_limit_current_val)
+        """
         for service in self.service_info.values():
             downloader_name = service.name
             downloader_obj = service.instance
@@ -328,10 +337,29 @@ class autoTransfer(_PluginBase):
             download_limit_current_val, upload_limit_current_val = (
                 downloader_obj.get_speed_limit()
             )
+
         return download_limit_current_val, upload_limit_current_val
 
+    def moveFailedFilesToPath(self,fail_reason,src):
+        """
+        转移失败的文件到指定的路径
+
+        :param fail_reason: 失败的原因
+        :param src: 需要转移的文件路径
+        """
+        try:
+            dst = self._pathAfterMoveFailure
+            if dst[-1] == "/":
+                dst = dst[:-1]
+            new_dst = f"{dst}/{fail_reason}{src}"
+            new_dst_dir = os.path.dirname(f"{dst}/{fail_reason}{src}")
+            os.makedirs(new_dst_dir, exist_ok=True)
+            shutil.move(src, new_dst)
+            logger.info(f"转移失败的文件 '{src}' 已成功移动到 '{new_dst}'")
+        except Exception as e:
+            logger.error(f"转移失败的文件 '{src}' 移动到 '{new_dst}' 失败 {str(e)}, traceback={traceback.format_exc()}")
+
     def transfer_all(self):
-        pass
         # 遍历所有目录
         for mon_path in self._dirconf.keys():
             logger.info(f"开始处理目录 {mon_path} ...")
@@ -472,6 +500,9 @@ class autoTransfer(_PluginBase):
                             title=f"{file_path.name} 未识别到媒体信息，无法入库！\n"
                             f"回复：```\n/redo {his.id} [tmdbid]|[类型]\n``` 手动识别转移。",
                         )
+                        # 转移失败文件到指定目录
+                        if self._pathAfterMoveFailure is not None and self._transfer_type == "move":
+                            self.moveFailedFilesToPath("未识别到媒体信息",file_item.path)
                     return
 
                 # 如果未开启新增已入库媒体是否跟随TMDB信息变化则根据tmdbid查询之前的title
@@ -619,6 +650,9 @@ class autoTransfer(_PluginBase):
                             text=f"原因：{transferinfo.message or '未知'}",
                             image=mediainfo.get_message_image(),
                         )
+                    # 转移失败文件到指定目录
+                    if self._pathAfterMoveFailure is not None and self._transfer_type == "move":
+                        self.moveFailedFilesToPath(transferinfo.message,file_item.path)
                     return
 
                 if self._history:
@@ -1242,6 +1276,29 @@ class autoTransfer(_PluginBase):
                         "content": [
                             {
                                 "component": "VCol",
+                                "props": {
+                                    "cols": 12,
+                                },
+                                "content": [
+                                    {
+                                        "component": "VTextarea",
+                                        "props": {
+                                            "model": "pathAfterMoveFailure",
+                                            "label": "移动方式整理失败后，将文件移动到此路径(会根据失败原因和原目录结构将文件移动到此处)",
+                                            "rows": 1,
+                                            "auto-grow": "{{ monitor_dirs.length > 0 }}",
+                                            "placeholder": "只能有一个路径，留空或'转移方式'不是'移动'均不生效",
+                                        },
+                                    }
+                                ],
+                            }
+                        ],
+                    },
+                    {
+                        "component": "VRow",
+                        "content": [
+                            {
+                                "component": "VCol",
                                 "props": {"cols": 12},
                                 "content": [
                                     {
@@ -1340,6 +1397,7 @@ class autoTransfer(_PluginBase):
             "del_empty_dir": False,
             "downloaderSpeedLimit": 0,
             "downloaders": "不限速",
+            "pathAfterMoveFailure": None,
         }
 
     def get_page(self) -> List[dict]:

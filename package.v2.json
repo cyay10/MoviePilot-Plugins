@@ -3,11 +3,12 @@
     "name": "autoTransfer",
     "description": "类似v1的目录监控，可定期整理文件",
     "labels": "autoTransfer",
-    "version": "1.0.7",
+    "version": "1.0.8",
     "icon": "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/refs/heads/main/icons/autotransfer.png",
     "author": "Dean",
     "level": 1,
     "history": {
+      "v1.0.8": "增加功能，转移失败的文件自动移动到指定目录",
       "v1.0.7": "图片改名",
       "v1.0.6": "版本号更新",
       "v1.0.5": "增加转移时qb限速",
