@@ -547,11 +547,15 @@ class autoTransfer(_PluginBase):
                         download_limit_current_val, _ = (
                             self.get_downloader_limit_current_val()
                         )
-                        if str(download_limit_current_val) > str(
+                        if float(download_limit_current_val) > float(
                             self._downloaderSpeedLimit
                         ):
                             is_download_speed_limited = self.set_download_limit(
                                 self._downloaderSpeedLimit
+                            )
+                        else:
+                            logger.info(
+                                f"不用设置下载器限速，当前下载器限速为 {download_limit_current_val} KiB/s 大于设定值 {self._downloaderSpeedLimit} KiB/s"
                             )
                     except Exception as e:
                         logger.error(
@@ -561,7 +565,7 @@ class autoTransfer(_PluginBase):
                         is_download_speed_limited = False
 
                     if not is_download_speed_limited:
-                        logger.error("设置qBittorrent限速失败")
+                        logger.debug("不用限速或限速失败")
                 else:
                     if "不限速-autoTransfer" in self._downloaders:
                         log_msg = "已勾选'不限速'或勾选需限速的下载器，默认关闭限速"

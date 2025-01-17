@@ -295,7 +295,7 @@ class diskSaver(_PluginBase):
                         self.get_downloader_limit_current_val()
                     )
                     # 现在的qb限速数值大于手动设置的数值才有必要限速，否则限速反而是提速了
-                    if str(download_limit_current_val) > str(
+                    if float(download_limit_current_val) > float(
                         self._downloaderSpeedLimit
                     ):
                         # 下载器限速
@@ -318,7 +318,7 @@ class diskSaver(_PluginBase):
                         self.get_downloader_limit_current_val()
                     )
                     # 现在的qb限速数值小于autoTransfer限速之前记录的数值才有必要恢复(提速)，否则提速反而是降(限)速了
-                    if str(download_limit_current_val) < str(
+                    if float(download_limit_current_val) < float(
                         self._download_limit_old_val
                     ):
                         # 下载器恢复原限速
