@@ -105,7 +105,6 @@ class diskSaver(_PluginBase):
                     _overwrite_mode = mon_path.split("@")[1]
                     mon_path = mon_path.split("@")[0]
 
-
                 mon_path = mon_path.split("#")[0]
 
                 # 存储目的目录
@@ -128,7 +127,6 @@ class diskSaver(_PluginBase):
                     self._dirconf[mon_path] = target_path
                 else:
                     self._dirconf[mon_path] = None
-
 
             # 运行一次定时服务
             if self._onlyonce:
@@ -166,7 +164,7 @@ class diskSaver(_PluginBase):
                 "min_free_space": self._min_free_space,
                 "download_limit_old_val": self._download_limit_old_val,
                 "upload_limit_old_val": self._upload_limit_old_val,
-                "dl_speed_limited": self._dl_speed_limited
+                "dl_speed_limited": self._dl_speed_limited,
             }
         )
 
@@ -209,7 +207,9 @@ class diskSaver(_PluginBase):
             if not downloader_obj:
                 logger.error(f"获取下载器失败 {downloader_name}")
                 continue
-            download_limit_current_val, upload_limit_current_val = downloader_obj.get_speed_limit()
+            download_limit_current_val, upload_limit_current_val = (
+                downloader_obj.get_speed_limit()
+            )
         return download_limit_current_val, upload_limit_current_val
 
     def set_download_limit(self, download_limit):
@@ -254,7 +254,7 @@ class diskSaver(_PluginBase):
         """
         将字节转换为更适合阅读的单位（KiB, MiB, GiB, TiB等）
         """
-        for unit in ['B', 'KiB', 'MiB', 'GiB', 'TiB']:
+        for unit in ["B", "KiB", "MiB", "GiB", "TiB"]:
             if byte_size < 1024.0:
                 return f"{byte_size:.2f} {unit}"
             byte_size /= 1024.0
@@ -283,40 +283,50 @@ class diskSaver(_PluginBase):
                     logger.debug(
                         "已勾选不限速，或未勾选，或没有下载器，不进行下载器限速"
                     )
-                elif available < int(self._min_free_space) * (2 ** 30) and not self._dl_speed_limited:
+                elif (
+                    available < int(self._min_free_space) * (2**30)
+                    and not self._dl_speed_limited
+                ):
                     logger.info(
                         f"开始限速 - 磁盘剩余空间 {self._min_free_space} GiB 小于 设置的最小空间 {self.human_readable_bytes(available)}"
                     )
                     # 先获取当前下载器的限速
-                    download_limit_current_val,upload_limit_current_val = self.get_downloader_limit_current_val()
-                    if not str(download_limit_current_val) == str(self._downloaderSpeedLimit):
+                    download_limit_current_val, upload_limit_current_val = (
+                        self.get_downloader_limit_current_val()
+                    )
+                    if not str(download_limit_current_val) == str(
+                        self._downloaderSpeedLimit
+                    ):
                         # 下载器限速
-                        self.set_download_limit(
-                            str(self._downloaderSpeedLimit)
-                        )
+                        self.set_download_limit(str(self._downloaderSpeedLimit))
                         # 标记已限速(_dl_speed_limited)并更新_download_limit_old_val和_upload_limit_old_val
                         self._dl_speed_limited = True
                         self._download_limit_old_val = download_limit_current_val
                         self._upload_limit_old_val = upload_limit_current_val
                         self.__update_config()
-                elif available >= int(self._min_free_space) * (2 ** 30) and self._dl_speed_limited:
+                elif (
+                    available >= int(self._min_free_space) * (2**30)
+                    and self._dl_speed_limited
+                ):
                     logger.info(
                         f"取消限速 - 磁盘剩余空间 {self._min_free_space} GiB 大于 设置的最小空间 {self.human_readable_bytes(available)}"
                     )
                     # 先获取当前下载器的限速
-                    download_limit_current_val,upload_limit_current_val = self.get_downloader_limit_current_val()
-                    if str(download_limit_current_val) != str(self._download_limit_old_val):
+                    download_limit_current_val, upload_limit_current_val = (
+                        self.get_downloader_limit_current_val()
+                    )
+                    if str(download_limit_current_val) != str(
+                        self._download_limit_old_val
+                    ):
                         # 取消限速(恢复原限速)
-                        self.set_download_limit(
-                            str(self._download_limit_old_val)
-                        )
+                        self.set_download_limit(str(self._download_limit_old_val))
                         self._dl_speed_limited = False
                         self.__update_config()
 
-
         except Exception as e:
-            logger.error("diskSaver 监控出错：%s - %s" % (str(e), traceback.format_exc()))
-
+            logger.error(
+                "diskSaver 监控出错：%s - %s" % (str(e), traceback.format_exc())
+            )
 
     def usage(self, paths: List[Path]) -> Optional[schemas.StorageUsage]:
         """
@@ -325,13 +335,11 @@ class diskSaver(_PluginBase):
         """
         # 获取传入的路径列表，计算总存储和空闲存储
         total_storage, free_storage = SystemUtils.space_usage(paths)
-        
+
         # 返回计算的存储使用情况
         return schemas.StorageUsage(
-            total=total_storage,  # 返回总存储
-            available=free_storage  # 返回可用存储
+            total=total_storage, available=free_storage  # 返回总存储  # 返回可用存储
         )
-
 
     def get_state(self) -> bool:
         return self._enabled
@@ -366,7 +374,6 @@ class diskSaver(_PluginBase):
             ]
         return []
 
-
     def get_form(self) -> Tuple[List[dict], Dict[str, Any]]:
         return [
             {
@@ -386,10 +393,10 @@ class diskSaver(_PluginBase):
                                                 "component": "VSwitch",
                                                 "props": {
                                                     "model": "enabled",
-                                                    "label": "启用插件"
-                                                }
+                                                    "label": "启用插件",
+                                                },
                                             }
-                                        ]
+                                        ],
                                     },
                                     {
                                         "component": "VCol",
@@ -399,14 +406,14 @@ class diskSaver(_PluginBase):
                                                 "component": "VSwitch",
                                                 "props": {
                                                     "model": "onlyonce",
-                                                    "label": "立即运行一次"
-                                                }
+                                                    "label": "立即运行一次",
+                                                },
                                             }
-                                        ]
-                                    }
-                                ]
+                                        ],
+                                    },
+                                ],
                             }
-                        ]
+                        ],
                     },
                     {
                         "component": "VRow",
