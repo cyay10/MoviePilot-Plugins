@@ -43,7 +43,7 @@ class autoTransfer(_PluginBase):
     # 插件描述
     plugin_desc = "类似v1的目录监控，可定期整理文件"
     # 插件图标
-    plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/refs/heads/main/icons/filebox.png"
+    plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/refs/heads/main/icons/disksaver.png"
     # 插件版本
     plugin_version = "0.0.1"
     # 插件作者

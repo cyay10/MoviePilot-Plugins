@@ -4,7 +4,7 @@
         "description": "此插件v1无用，仅作占位测试",
         "labels": "autoTransfer",
         "version": "0.0.1",
-        "icon": "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/refs/heads/main/icons/filebox.png",
+        "icon": "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/refs/heads/main/icons/autotransfer.png",
         "author": "Dean",
         "level": 1,
         "history": {
