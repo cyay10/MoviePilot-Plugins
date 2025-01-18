@@ -45,7 +45,7 @@ class autoTransfer(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/refs/heads/main/icons/autotransfer.png"
     # 插件版本
-    plugin_version = "1.0.11"
+    plugin_version = "1.0.12"
     # 插件作者
     plugin_author = "Dean"
     # 作者主页
@@ -349,6 +349,7 @@ class autoTransfer(_PluginBase):
         :param fail_reason: 失败的原因
         :param src: 需要转移的文件路径
         """
+        is_download_speed_limited = False
         try:
             # 先获取当前下载器的限速
             download_limit_current_val, _ = self.get_downloader_limit_current_val()
@@ -381,6 +382,7 @@ class autoTransfer(_PluginBase):
             is_download_speed_limited = False
 
         try:
+            logger.info(f"开始转移失败的文件 '{src}'")
             dst = self._pathAfterMoveFailure
             if dst[-1] == "/":
                 dst = dst[:-1]
