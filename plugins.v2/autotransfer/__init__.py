@@ -45,7 +45,7 @@ class autoTransfer(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/refs/heads/main/icons/autotransfer.png"
     # 插件版本
-    plugin_version = "1.0.10"
+    plugin_version = "1.0.11"
     # 插件作者
     plugin_author = "Dean"
     # 作者主页
@@ -283,11 +283,11 @@ class autoTransfer(_PluginBase):
 
     def set_download_limit(self, download_limit):
         try:
-            if not download_limit or not download_limit.isdigit():
-                self.post_message(
-                    mtype=NotificationType.SiteMessage,
-                    title="autoTransfer QB限速失败",
-                    text="download_limit不是一个数值",
+            try:
+                download_limit = int(download_limit)
+            except Exception as e:
+                logger.error(
+                    f"download_limit 转换失败 {str(e)}, traceback={traceback.format_exc()}"
                 )
                 return False
 
@@ -305,7 +305,7 @@ class autoTransfer(_PluginBase):
                 )
             return flag
         except Exception as e:
-            logger.warn(
+            logger.error(
                 f"设置下载限速失败 {str(e)}, traceback={traceback.format_exc()}"
             )
             return False
@@ -369,7 +369,7 @@ class autoTransfer(_PluginBase):
                     )
             else:
                 logger.info(
-                    f"不用设置下载器限速，当前下载器限速为 {download_limit_current_val} KiB/s 大于设定值 {self._downloaderSpeedLimit} KiB/s"
+                    f"不用设置下载器限速，当前下载器限速为 {download_limit_current_val} KiB/s 大于或等于设定值 {self._downloaderSpeedLimit} KiB/s"
                 )
         except Exception as e:
             logger.error(
@@ -396,8 +396,13 @@ class autoTransfer(_PluginBase):
 
         # 恢复原速
         if is_download_speed_limited:
-            self.set_download_limit(str(download_limit_current_val))
-            logger.info(f"取消下载器限速 - 因移动或复制文件 '{src}' 完成")
+            recover_download_limit_success = self.set_download_limit(
+                download_limit_current_val
+            )
+            if recover_download_limit_success:
+                logger.info("取消下载器限速成功")
+            else:
+                logger.error("取消下载器限速失败")
 
     def transfer_all(self):
         # 遍历所有目录
@@ -633,7 +638,7 @@ class autoTransfer(_PluginBase):
                             )
                         else:
                             logger.info(
-                                f"不用设置下载器限速，当前下载器限速为 {download_limit_current_val} KiB/s 大于设定值 {self._downloaderSpeedLimit} KiB/s"
+                                f"不用设置下载器限速，当前下载器限速为 {download_limit_current_val} KiB/s 大于或等于设定值 {self._downloaderSpeedLimit} KiB/s"
                             )
                     except Exception as e:
                         logger.error(
@@ -670,10 +675,13 @@ class autoTransfer(_PluginBase):
                 )
                 # 恢复原速
                 if is_download_speed_limited:
-                    self.set_download_limit(str(download_limit_current_val))
-                    logger.info(
-                        f"取消下载器限速 - 因移动或复制文件{file_item.path}完成"
+                    recover_download_limit_success = self.set_download_limit(
+                        download_limit_current_val
                     )
+                    if recover_download_limit_success:
+                        logger.info("取消下载器限速成功")
+                    else:
+                        logger.error("取消下载器限速失败")
 
                 if not transferinfo:
                     logger.error("文件转移模块运行失败")
