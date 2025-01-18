@@ -45,7 +45,7 @@ class autoTransfer(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/refs/heads/main/icons/autotransfer.png"
     # 插件版本
-    plugin_version = "1.0.9"
+    plugin_version = "1.0.10"
     # 插件作者
     plugin_author = "Dean"
     # 作者主页
@@ -305,7 +305,9 @@ class autoTransfer(_PluginBase):
                 )
             return flag
         except Exception as e:
-            logger.warn(f"设置下载限速失败 {str(e)}, traceback={traceback.format_exc()}")
+            logger.warn(
+                f"设置下载限速失败 {str(e)}, traceback={traceback.format_exc()}"
+            )
             return False
 
     def check_is_qb(self, service_info) -> bool:
@@ -340,7 +342,7 @@ class autoTransfer(_PluginBase):
 
         return download_limit_current_val, upload_limit_current_val
 
-    def moveFailedFilesToPath(self,fail_reason,src):
+    def moveFailedFilesToPath(self, fail_reason, src):
         """
         转移失败的文件到指定的路径
 
@@ -349,11 +351,10 @@ class autoTransfer(_PluginBase):
         """
         try:
             # 先获取当前下载器的限速
-            download_limit_current_val, _ = (
-                self.get_downloader_limit_current_val()
-            )
-            if float(download_limit_current_val) > float(
-                self._downloaderSpeedLimit
+            download_limit_current_val, _ = self.get_downloader_limit_current_val()
+            if (
+                float(download_limit_current_val) > float(self._downloaderSpeedLimit)
+                or float(download_limit_current_val) == 0
             ):
                 is_download_speed_limited = self.set_download_limit(
                     self._downloaderSpeedLimit
@@ -368,13 +369,15 @@ class autoTransfer(_PluginBase):
                     )
             else:
                 logger.info(
-                    "不用设置下载器限速，当前下载器限速为"
+                    f"不用设置下载器限速，当前下载器限速为 {download_limit_current_val} KiB/s 大于设定值 {self._downloaderSpeedLimit} KiB/s"
                 )
         except Exception as e:
             logger.error(
                 f"下载器限速失败，请检查下载器 {', '.join(self._downloaders)} 的联通性，本次整理将跳过下载器限速"
             )
-            logger.debug(f"下载器限速失败：{str(e)}, traceback={traceback.format_exc()}")
+            logger.debug(
+                f"下载器限速失败：{str(e)}, traceback={traceback.format_exc()}"
+            )
             is_download_speed_limited = False
 
         try:
@@ -387,14 +390,14 @@ class autoTransfer(_PluginBase):
             shutil.move(src, new_dst)
             logger.info(f"转移失败的文件 '{src}' 已成功移动到 '{new_dst}'")
         except Exception as e:
-            logger.error(f"转移失败的文件 '{src}' 移动到 '{new_dst}' 失败 {str(e)}, traceback={traceback.format_exc()}")
-            
+            logger.error(
+                f"转移失败的文件 '{src}' 移动到 '{new_dst}' 失败 {str(e)}, traceback={traceback.format_exc()}"
+            )
+
         # 恢复原速
         if is_download_speed_limited:
             self.set_download_limit(str(download_limit_current_val))
-            logger.info(
-                f"取消下载器限速 - 因移动或复制文件 '{src}' 完成"
-            )
+            logger.info(f"取消下载器限速 - 因移动或复制文件 '{src}' 完成")
 
     def transfer_all(self):
         # 遍历所有目录
@@ -538,8 +541,13 @@ class autoTransfer(_PluginBase):
                             f"回复：```\n/redo {his.id} [tmdbid]|[类型]\n``` 手动识别转移。",
                         )
                         # 转移失败文件到指定目录
-                        if self._pathAfterMoveFailure is not None and self._transfer_type == "move":
-                            self.moveFailedFilesToPath("未识别到媒体信息",file_item.path)
+                        if (
+                            self._pathAfterMoveFailure is not None
+                            and self._transfer_type == "move"
+                        ):
+                            self.moveFailedFilesToPath(
+                                "未识别到媒体信息", file_item.path
+                            )
                     return
 
                 # 如果未开启新增已入库媒体是否跟随TMDB信息变化则根据tmdbid查询之前的title
@@ -615,8 +623,10 @@ class autoTransfer(_PluginBase):
                         download_limit_current_val, _ = (
                             self.get_downloader_limit_current_val()
                         )
-                        if float(download_limit_current_val) > float(
-                            self._downloaderSpeedLimit
+                        if (
+                            float(download_limit_current_val)
+                            > float(self._downloaderSpeedLimit)
+                            or float(download_limit_current_val) == 0
                         ):
                             is_download_speed_limited = self.set_download_limit(
                                 self._downloaderSpeedLimit
@@ -629,7 +639,9 @@ class autoTransfer(_PluginBase):
                         logger.error(
                             f"下载器限速失败，请检查下载器 {', '.join(self._downloaders)} 的联通性，本次整理将跳过下载器限速"
                         )
-                        logger.debug(f"下载器限速失败：{str(e)}, traceback={traceback.format_exc()}")
+                        logger.debug(
+                            f"下载器限速失败：{str(e)}, traceback={traceback.format_exc()}"
+                        )
                         is_download_speed_limited = False
 
                     if not is_download_speed_limited:
@@ -688,8 +700,11 @@ class autoTransfer(_PluginBase):
                             image=mediainfo.get_message_image(),
                         )
                     # 转移失败文件到指定目录
-                    if self._pathAfterMoveFailure is not None and self._transfer_type == "move":
-                        self.moveFailedFilesToPath(transferinfo.message,file_item.path)
+                    if (
+                        self._pathAfterMoveFailure is not None
+                        and self._transfer_type == "move"
+                    ):
+                        self.moveFailedFilesToPath(transferinfo.message, file_item.path)
                     return
 
                 if self._history:
