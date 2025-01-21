@@ -3,11 +3,12 @@
     "name": "autoTransfer",
     "description": "类似v1的目录监控，可定期整理文件",
     "labels": "autoTransfer",
-    "version": "1.0.11",
+    "version": "1.0.13",
     "icon": "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/refs/heads/main/icons/autotransfer.png",
     "author": "Dean",
     "level": 1,
     "history": {
+      "v1.0.13": "修复文件转移失败时的重名问题",
       "v1.0.12": "增加变量初始化",
       "v1.0.11": "错误修复",
       "v1.0.10": "修复原下载器限速为0时跳过限速的问题",

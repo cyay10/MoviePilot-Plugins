@@ -45,7 +45,7 @@ class autoTransfer(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/refs/heads/main/icons/autotransfer.png"
     # 插件版本
-    plugin_version = "1.0.12"
+    plugin_version = "1.0.13"
     # 插件作者
     plugin_author = "Dean"
     # 作者主页
@@ -389,6 +389,11 @@ class autoTransfer(_PluginBase):
             new_dst = f"{dst}/{fail_reason}{src}"
             new_dst_dir = os.path.dirname(f"{dst}/{fail_reason}{src}")
             os.makedirs(new_dst_dir, exist_ok=True)
+            # 检查是否有重名文件
+            if os.path.exists(new_dst):
+                timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+                filename, ext = os.path.splitext(new_dst)
+                new_dst = f"{filename}_{timestamp}{ext}"
             shutil.move(src, new_dst)
             logger.info(f"转移失败的文件 '{src}' 已成功移动到 '{new_dst}'")
         except Exception as e:
