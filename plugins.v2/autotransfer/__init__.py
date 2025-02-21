@@ -45,7 +45,7 @@ class autoTransfer(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/refs/heads/main/icons/autotransfer.png"
     # 插件版本
-    plugin_version = "1.0.14"
+    plugin_version = "1.0.15"
     # 插件作者
     plugin_author = "Dean"
     # 作者主页
@@ -94,6 +94,8 @@ class autoTransfer(_PluginBase):
     _medias = {}
     # 退出事件
     _event = threading.Event()
+    _move_failed_files = True
+    _move_excluded_files = True
 
     def init_plugin(self, config: dict = None):
         self.transferhis = TransferHistoryOper()
@@ -130,6 +132,8 @@ class autoTransfer(_PluginBase):
             self._pathAfterMoveFailure = config.get("pathAfterMoveFailure") or None
             self._downloaderSpeedLimit = config.get("downloaderSpeedLimit") or 0
             self._downloaders = config.get("downloaders") or ["不限速-autoTransfer"]
+            self._move_failed_files = config.get("move_failed_files", True)
+            self._move_excluded_files = config.get("move_excluded_files", True)
 
         # 停止现有任务
         self.stop_service()
@@ -246,6 +250,8 @@ class autoTransfer(_PluginBase):
                 "pathAfterMoveFailure": self._pathAfterMoveFailure,
                 "downloaderSpeedLimit": self._downloaderSpeedLimit,
                 "downloaders": self._downloaders,
+                "move_failed_files": self._move_failed_files,
+                "move_excluded_files": self._move_excluded_files,
             }
         )
 
@@ -475,6 +481,12 @@ class autoTransfer(_PluginBase):
                             logger.info(
                                 f"{event_path} 命中过滤关键字 {keyword}，不处理"
                             )
+                            if (
+                                self._pathAfterMoveFailure is not None
+                                and self._transfer_type == "move"
+                                and self._move_excluded_files
+                            ):
+                                self.moveFailedFilesToPath("命中过滤关键字", str(file_path))
                             return
 
                 # 整理屏蔽词不处理
@@ -491,6 +503,12 @@ class autoTransfer(_PluginBase):
                             logger.info(
                                 f"{event_path} 命中整理屏蔽词 {keyword}，不处理"
                             )
+                            if (
+                                self._pathAfterMoveFailure is not None
+                                and self._transfer_type == "move"
+                                and self._move_excluded_files
+                            ):
+                                self.moveFailedFilesToPath("命中整理屏蔽词", str(file_path))
                             return
 
                 # 不是媒体文件不处理
@@ -556,6 +574,7 @@ class autoTransfer(_PluginBase):
                         if (
                             self._pathAfterMoveFailure is not None
                             and self._transfer_type == "move"
+                            and self._move_failed_files
                         ):
                             self.moveFailedFilesToPath(
                                 "未识别到媒体信息", file_item.path
@@ -718,6 +737,7 @@ class autoTransfer(_PluginBase):
                     if (
                         self._pathAfterMoveFailure is not None
                         and self._transfer_type == "move"
+                        and self._move_failed_files
                     ):
                         self.moveFailedFilesToPath(transferinfo.message, file_item.path)
                     return
@@ -1128,6 +1148,62 @@ class autoTransfer(_PluginBase):
                                 "props": {"cols": 12},
                                 "content": [
                                     {
+                                        "component": "VDivider",
+                                        "props": {
+                                            "class": "my-3"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "component": "VCol",
+                                "props": {"cols": 12},
+                                "content": [
+                                    {
+                                        "component": "VRow",
+                                        "content": [
+                                            {
+                                                "component": "VCol",
+                                                "props": {"cols": 12, "md": 6},
+                                                "content": [
+                                                    {
+                                                        "component": "VSwitch",
+                                                        "props": {
+                                                            "model": "move_failed_files",
+                                                            "label": "移动失败文件",
+                                                            "hint": "当转移失败时移动文件"
+                                                        }
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "component": "VCol",
+                                                "props": {"cols": 12, "md": 6},
+                                                "content": [
+                                                    {
+                                                        "component": "VSwitch",
+                                                        "props": {
+                                                            "model": "move_excluded_files",
+                                                            "label": "移动被屏蔽词/关键字的文件",
+                                                            "hint": "当命中过滤规则时移动文件"
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "component": "VRow",
+                        "content": [
+                            {
+                                "component": "VCol",
+                                "props": {"cols": 12},
+                                "content": [
+                                    {
                                         "component": "VCol",
                                         "props": {"cols": 12},
                                         "content": [
@@ -1299,17 +1375,23 @@ class autoTransfer(_PluginBase):
                                 "props": {"cols": 12},
                                 "content": [
                                     {
-                                        "component": "VTextarea",
-                                        "props": {
-                                            "model": "monitor_dirs",
-                                            "label": "监控目录(下载目录/源目录)",
-                                            "rows": 6,
-                                            "auto-grow": "{{ monitor_dirs.length > 0 }}",
-                                            "placeholder": "每一行一个目录，支持以下几种配置方式，转移方式支持 move、copy、link、softlink、rclone_copy、rclone_move：\n"
-                                            "监控目录:转移目的目录\n"
-                                            "监控目录:转移目的目录#转移方式\n"
-                                            "例如:\n/Downloads/电影/:/Library/电影/\n/Downloads/电视剧/:/Library/电视剧/",
-                                        },
+                                        "component": "VCol",
+                                        "props": {"cols": 12},
+                                        "content": [
+                                            {
+                                                "component": "VTextarea",
+                                                "props": {
+                                                    "model": "monitor_dirs",
+                                                    "label": "监控目录(下载目录/源目录)",
+                                                    "rows": 6,
+                                                    "auto-grow": "{{ monitor_dirs.length > 0 }}",
+                                                    "placeholder": "每一行一个目录，支持以下几种配置方式，转移方式支持 move、copy、link、softlink、rclone_copy、rclone_move：\n"
+                                                    "监控目录:转移目的目录\n"
+                                                    "监控目录:转移目的目录#转移方式\n"
+                                                    "例如:\n/Downloads/电影/:/Library/电影/\n/Downloads/电视剧/:/Library/电视剧/",
+                                                },
+                                            }
+                                        ],
                                     }
                                 ],
                             }
@@ -1465,6 +1547,8 @@ class autoTransfer(_PluginBase):
             "downloaderSpeedLimit": 0,
             "downloaders": "不限速",
             "pathAfterMoveFailure": None,
+            "move_failed_files": True,
+            "move_excluded_files": True,
         }
 
     def get_page(self) -> List[dict]:
