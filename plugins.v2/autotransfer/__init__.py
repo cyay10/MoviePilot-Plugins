@@ -45,7 +45,7 @@ class autoTransfer(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/refs/heads/main/icons/autotransfer.png"
     # 插件版本
-    plugin_version = "1.0.15"
+    plugin_version = "1.0.16"
     # 插件作者
     plugin_author = "Dean"
     # 作者主页
@@ -81,6 +81,8 @@ class autoTransfer(_PluginBase):
     filetransfer = None
     mediaChain = None
     _size = 0
+    # 取消限速开关
+    _pre_cancel_speed_limit = False
     # 转移方式
     _transfer_type = "move"
     _monitor_dirs = ""
@@ -134,6 +136,7 @@ class autoTransfer(_PluginBase):
             self._downloaders = config.get("downloaders") or ["不限速-autoTransfer"]
             self._move_failed_files = config.get("move_failed_files", True)
             self._move_excluded_files = config.get("move_excluded_files", True)
+            self._pre_cancel_speed_limit = config.get("pre_cancel_speed_limit", False)
 
         # 停止现有任务
         self.stop_service()
@@ -252,6 +255,7 @@ class autoTransfer(_PluginBase):
                 "downloaders": self._downloaders,
                 "move_failed_files": self._move_failed_files,
                 "move_excluded_files": self._move_excluded_files,
+                "pre_cancel_speed_limit": self._pre_cancel_speed_limit,
             }
         )
 
@@ -418,6 +422,17 @@ class autoTransfer(_PluginBase):
                 logger.error("取消下载器限速失败")
 
     def transfer_all(self):
+        """
+        立即运行一次
+        """
+        # 执行前先取消下载器限速
+        if self._pre_cancel_speed_limit:
+            logger.info("【预取消限速】正在取消下载器限速...")
+            if self.set_download_limit(0):
+                logger.info("下载器限速已取消")
+            else:
+                logger.error("下载器限速取消失败")
+
         # 遍历所有目录
         for mon_path in self._dirconf.keys():
             logger.info(f"开始处理目录 {mon_path} ...")
@@ -1338,6 +1353,20 @@ class autoTransfer(_PluginBase):
                             },
                             {
                                 "component": "VCol",
+                                "props": {"cols": 12, "md": 3},
+                                "content": [
+                                    {
+                                        "component": "VSwitch",
+                                        "props": {
+                                            "model": "pre_cancel_speed_limit",
+                                            "label": "运行前取消限速",
+                                            "hint": "每次运行插件前强制取消下载器限速（防止意外断电后限速未恢复）"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "component": "VCol",
                                 "props": {"cols": 3, "md": 3},
                                 "content": [
                                     {
@@ -1549,6 +1578,7 @@ class autoTransfer(_PluginBase):
             "pathAfterMoveFailure": None,
             "move_failed_files": True,
             "move_excluded_files": True,
+            "pre_cancel_speed_limit": False,
         }
 
     def get_page(self) -> List[dict]:
