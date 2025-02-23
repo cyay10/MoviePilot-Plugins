@@ -45,7 +45,7 @@ class autoTransfer(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/refs/heads/main/icons/autotransfer.png"
     # 插件版本
-    plugin_version = "1.0.16"
+    plugin_version = "1.0.17"
     # 插件作者
     plugin_author = "Dean"
     # 作者主页
@@ -405,10 +405,10 @@ class autoTransfer(_PluginBase):
                 filename, ext = os.path.splitext(new_dst)
                 new_dst = f"{filename}_{timestamp}{ext}"
             shutil.move(src, new_dst)
-            logger.info(f"转移失败的文件 '{src}' 已成功移动到 '{new_dst}'")
+            logger.info(f"成功移动转移失败的文件 '{src}' 到 '{new_dst}'")
         except Exception as e:
             logger.error(
-                f"转移失败的文件 '{src}' 移动到 '{new_dst}' 失败 {str(e)}, traceback={traceback.format_exc()}"
+                f"将转移失败的文件 '{src}' 移动到 '{new_dst}' 失败, traceback={traceback.format_exc()}"
             )
 
         # 恢复原速
@@ -1163,62 +1163,6 @@ class autoTransfer(_PluginBase):
                                 "props": {"cols": 12},
                                 "content": [
                                     {
-                                        "component": "VDivider",
-                                        "props": {
-                                            "class": "my-3"
-                                        }
-                                    }
-                                ]
-                            },
-                            {
-                                "component": "VCol",
-                                "props": {"cols": 12},
-                                "content": [
-                                    {
-                                        "component": "VRow",
-                                        "content": [
-                                            {
-                                                "component": "VCol",
-                                                "props": {"cols": 12, "md": 6},
-                                                "content": [
-                                                    {
-                                                        "component": "VSwitch",
-                                                        "props": {
-                                                            "model": "move_failed_files",
-                                                            "label": "移动失败文件",
-                                                            "hint": "当转移失败时移动文件"
-                                                        }
-                                                    }
-                                                ]
-                                            },
-                                            {
-                                                "component": "VCol",
-                                                "props": {"cols": 12, "md": 6},
-                                                "content": [
-                                                    {
-                                                        "component": "VSwitch",
-                                                        "props": {
-                                                            "model": "move_excluded_files",
-                                                            "label": "移动被屏蔽词/关键字的文件",
-                                                            "hint": "当命中过滤规则时移动文件"
-                                                        }
-                                                    }
-                                                ]
-                                            }
-                                        ]
-                                    }
-                                ]
-                            }
-                        ]
-                    },
-                    {
-                        "component": "VRow",
-                        "content": [
-                            {
-                                "component": "VCol",
-                                "props": {"cols": 12},
-                                "content": [
-                                    {
                                         "component": "VCol",
                                         "props": {"cols": 12},
                                         "content": [
@@ -1353,20 +1297,6 @@ class autoTransfer(_PluginBase):
                             },
                             {
                                 "component": "VCol",
-                                "props": {"cols": 12, "md": 3},
-                                "content": [
-                                    {
-                                        "component": "VSwitch",
-                                        "props": {
-                                            "model": "pre_cancel_speed_limit",
-                                            "label": "运行前取消限速",
-                                            "hint": "每次运行插件前强制取消下载器限速（防止意外断电后限速未恢复）"
-                                        }
-                                    }
-                                ]
-                            },
-                            {
-                                "component": "VCol",
                                 "props": {"cols": 3, "md": 3},
                                 "content": [
                                     {
@@ -1378,6 +1308,20 @@ class autoTransfer(_PluginBase):
                                         },
                                     }
                                 ],
+                            },
+                            {
+                                "component": "VCol",
+                                "props": {"cols": 12, "md": 3},
+                                "content": [
+                                    {
+                                        "component": "VSwitch",
+                                        "props": {
+                                            "model": "pre_cancel_speed_limit",
+                                            "label": "运行前取消限速",
+                                            "hint": "每次运行插件前强制取消下载器限速（防止意外断电后限速未恢复）"
+                                        }
+                                    }
+                                ]
                             },
                             {
                                 "component": "VCol",
@@ -1454,6 +1398,65 @@ class autoTransfer(_PluginBase):
                         "content": [
                             {
                                 "component": "VCol",
+                                "props": {"cols": 12},
+                                "content": [
+                                    {
+                                        "component": "VCol",
+                                        "props": {"cols": 12},
+                                        "content": [
+                                            {
+                                                "component": "VProgressLinear",
+                                            }
+                                        ],
+                                    }
+                                ],
+                            },
+                            {
+                                "component": "VCol",
+                                "props": {"cols": 12},
+                                "content": [
+                                    {
+                                        "component": "VRow",
+                                        "content": [
+                                            {
+                                                "component": "VCol",
+                                                "props": {"cols": 12, "md": 6},
+                                                "content": [
+                                                    {
+                                                        "component": "VSwitch",
+                                                        "props": {
+                                                            "model": "move_failed_files",
+                                                            "label": "移动失败文件",
+                                                            "hint": "当转移失败时移动文件"
+                                                        }
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "component": "VCol",
+                                                "props": {"cols": 12, "md": 6},
+                                                "content": [
+                                                    {
+                                                        "component": "VSwitch",
+                                                        "props": {
+                                                            "model": "move_excluded_files",
+                                                            "label": "移动匹配 屏蔽词/关键字 的文件",
+                                                            "hint": "当命中过滤规则时移动文件"
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "component": "VRow",
+                        "content": [
+                            {
+                                "component": "VCol",
                                 "props": {
                                     "cols": 12,
                                 },
@@ -1462,10 +1465,10 @@ class autoTransfer(_PluginBase):
                                         "component": "VTextarea",
                                         "props": {
                                             "model": "pathAfterMoveFailure",
-                                            "label": "移动方式整理失败后，将文件移动到此路径(会根据失败原因和原目录结构将文件移动到此处)",
+                                            "label": "移动方式下，当整理失败或命中关键词后，将文件移动到此路径(会根据失败原因和原目录结构将文件移动到此处)",
                                             "rows": 1,
                                             "auto-grow": "{{ monitor_dirs.length > 0 }}",
-                                            "placeholder": "只能有一个路径，留空或'转移方式'不是'移动'均不生效",
+                                            "placeholder": "只能有一个路径，留空或'转移方式'不是'移动'或关闭上面两个开关均不生效",
                                         },
                                     }
                                 ],
@@ -1484,7 +1487,7 @@ class autoTransfer(_PluginBase):
                                         "props": {
                                             "type": "info",
                                             "variant": "tonal",
-                                            "text": "1.入库消息延迟默认10s，如网络较慢可酌情调大，有助于发送统一入库消息。\n2.源目录与目的目录设置一致，则默认使用目录设置配置。否则可在源目录后拼接@覆盖方式（默认never覆盖方式）。\n3.开启软连接/Strm会在监控转移后联动【实时软连接】/【云盘Strm[助手]】插件生成软连接/Strm（只处理媒体文件，不处理刮削文件）。\n4.启用此插件后，可将`设定`--`存储&目录`--`目录`--`自动整理`改为`不整理`或`手动整理`",
+                                            "text": "1.入库消息延迟默认10s，如网络较慢可酌情调大，有助于发送统一入库消息。\n2.源目录与目的目录设置一致，则默认使用目录设置配置。否则可在源目录后拼接@覆盖方式（默认never覆盖方式）。\n3.开启软连接/Strm会在监控转移后联动【实时软连接】/【云盘Strm[助手]】插件生成软连接/Strm（只处理媒体文件，不处理刮削文件）。\n4.启用此插件后，可将`设定`--`存储&目录`--`目录`--`自动整理`改为`不整理`或`手动整理`\n\n此插件由thsrite的目录监控插件修改而得\n本意是为了做类似v1的定时整理，因我只用本地移动，原地整理，故也不知软/硬链、Strm之类的是否可用",
                                             "style": {
                                                 "white-space": "pre-line",
                                                 "word-wrap": "break-word",
@@ -1512,40 +1515,12 @@ class autoTransfer(_PluginBase):
                                         "props": {
                                             "type": "info",
                                             "variant": "tonal",
-                                            "text": "此插件由thsrite的目录监控插件修改而得\n本意是为了做类似v1的定时整理，因我只用本地移动，原地整理，故也不知软/硬链、Strm之类的是否可用",
+                                            "text": "排除关键词推荐使用下面9行(一行一个):\n```\nSpecial Ending Movie\n\\[((TV|BD|\\bBlu-ray\\b)?\\s*CM\\s*\\d{2,3})\\]\n\\[Teaser.*?\\]\n\\[PV.*?\\]\n\\[NC[OPED]+.*?\\]\n\\[S\\d+\\s+Recap(\\s+\\d+)?\\]\n\\b(CDs|SPs|Scans|Bonus|映像特典|特典CD|/mv)\\b\n\\b(NC)?(Disc|SP|片头|OP|片尾|ED|PV|CM|MENU|EDPV|SongSpot|BDSpot)(\\d{0,2}|_ALL)\\b\n(?i)\\b(sample|preview|menu|special)\\b\n```\n排除bdmv再加入下面2行:\n```\n\\d+\\.(?i)(m2ts|mpls)$\n\\.(?i)bdmv$\n```\n",
                                             "style": {
                                                 "white-space": "pre-line",
                                                 "word-wrap": "break-word",
                                                 "height": "auto",
-                                                "max-height": "300px",
-                                                "overflow-y": "auto",
-                                            },
-                                        },
-                                    }
-                                ],
-                            }
-                        ],
-                    },
-                    {
-                        "component": "VRow",
-                        "content": [
-                            {
-                                "component": "VCol",
-                                "props": {
-                                    "cols": 12,
-                                },
-                                "content": [
-                                    {
-                                        "component": "VAlert",
-                                        "props": {
-                                            "type": "info",
-                                            "variant": "tonal",
-                                            "text": "排除关键词推荐使用(Chrome和Firefox可直接复制，Safari直接复制会合并为1行，Safari需逐行复制):\nSpecial Ending Movie\n\\[((TV|BD|\\bBlu-ray\\b)?\\s*CM\\s*\\d{2,3})\\]\n\\[Teaser.*?\\]\n\\[PV.*?\\]\n\\[NC[OPED]+.*?\\]\n\\[S\\d+\\s+Recap(\\s+\\d+)?\\]\nMenu\nPreview\n\\b(CDs|SPs|Scans|Bonus|映像特典|特典CD|specials|Menu|Preview|/mv)\\b\n\\b(NC)?(Disc|SP|片头|OP|片尾|ED|PV|CM|MENU|EDPV|SongSpot|BDSpot)(\\d{0,2}|_ALL)\\b\n\\[Ss\\]ample\n",
-                                            "style": {
-                                                "white-space": "pre-line",
-                                                "word-wrap": "break-word",
-                                                "height": "auto",
-                                                "max-height": "300px",
+                                                "max-height": "500px",
                                                 "overflow-y": "auto",
                                             },
                                         },
