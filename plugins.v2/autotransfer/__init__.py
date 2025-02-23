@@ -45,7 +45,7 @@ class autoTransfer(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/refs/heads/main/icons/autotransfer.png"
     # 插件版本
-    plugin_version = "1.0.17"
+    plugin_version = "1.0.18"
     # 插件作者
     plugin_author = "Dean"
     # 作者主页
@@ -1297,7 +1297,7 @@ class autoTransfer(_PluginBase):
                             },
                             {
                                 "component": "VCol",
-                                "props": {"cols": 3, "md": 3},
+                                "props": {"cols": 12, "md": 3},
                                 "content": [
                                     {
                                         "component": "VTextField",
@@ -1311,13 +1311,13 @@ class autoTransfer(_PluginBase):
                             },
                             {
                                 "component": "VCol",
-                                "props": {"cols": 12, "md": 3},
+                                "props": {"cols": 12, "md": 5},
                                 "content": [
                                     {
                                         "component": "VSwitch",
                                         "props": {
                                             "model": "pre_cancel_speed_limit",
-                                            "label": "运行前取消限速",
+                                            "label": "每次运行前取消qb限速",
                                             "hint": "每次运行插件前强制取消下载器限速（防止意外断电后限速未恢复）"
                                         }
                                     }
@@ -1515,7 +1515,7 @@ class autoTransfer(_PluginBase):
                                         "props": {
                                             "type": "info",
                                             "variant": "tonal",
-                                            "text": "排除关键词推荐使用下面9行(一行一个):\n```\nSpecial Ending Movie\n\\[((TV|BD|\\bBlu-ray\\b)?\\s*CM\\s*\\d{2,3})\\]\n\\[Teaser.*?\\]\n\\[PV.*?\\]\n\\[NC[OPED]+.*?\\]\n\\[S\\d+\\s+Recap(\\s+\\d+)?\\]\n\\b(CDs|SPs|Scans|Bonus|映像特典|特典CD|/mv)\\b\n\\b(NC)?(Disc|SP|片头|OP|片尾|ED|PV|CM|MENU|EDPV|SongSpot|BDSpot)(\\d{0,2}|_ALL)\\b\n(?i)\\b(sample|preview|menu|special)\\b\n```\n排除bdmv再加入下面2行:\n```\n\\d+\\.(?i)(m2ts|mpls)$\n\\.(?i)bdmv$\n```\n",
+                                            "text": "排除关键词推荐使用下面9行(一行一个):\n```\nSpecial Ending Movie\n\\[((TV|BD|\\bBlu-ray\\b)?\\s*CM\\s*\\d{2,3})\\]\n\\[Teaser.*?\\]\n\\[PV.*?\\]\n\\[NC[OPED]+.*?\\]\n\\[S\\d+\\s+Recap(\\s+\\d+)?\\]\n\\b(CDs|SPs|Scans|Bonus|映像特典|特典CD|/mv)\\b\n\\b(NC)?(Disc|SP|片头|OP|片尾|ED|PV|CM|MENU|EDPV|SongSpot|BDSpot)(\\d{0,2}|_ALL)\\b\n(?i)\\b(sample|preview|menu|special)\\b\n```\n排除bdmv再加入下面2行:\n```\n(?i)\\d+\\.(m2ts|mpls)$\n(?i)\\.bdmv$\n```\n",
                                             "style": {
                                                 "white-space": "pre-line",
                                                 "word-wrap": "break-word",
