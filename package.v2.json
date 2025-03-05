@@ -4,7 +4,7 @@
     "description": "类似v1的目录监控，可定期整理文件",
     "labels": "autoTransfer",
     "version": "1.0.18",
-    "icon": "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/refs/heads/main/icons/autotransfer.png",
+    "icon": "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/main/icons/autotransfer.png",
     "author": "Dean",
     "level": 1,
     "history": {
@@ -27,6 +27,18 @@
       "v1.0.2": "VTextarea auto-grow",
       "v1.0.1": "autoTransfer",
       "v1.0.0": "autoTransfer"
+    }
+  },
+  "autoSubscribe": {
+    "name": "autoSubscribe",
+    "description": "(没写完别用)通过网页获取tx, iqy, youku的最新电视剧并订阅",
+    "labels": "autoSubscribe",
+    "version": "1.0.0",
+    "icon": "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/main/icons/autosubscribe.png",
+    "author": "Dean",
+    "level": 1,
+    "history": {
+      "v1.0.0": "autoSubscribe init"
     }
   }
 }
