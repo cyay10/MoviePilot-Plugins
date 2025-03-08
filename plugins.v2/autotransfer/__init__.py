@@ -45,7 +45,7 @@ class autoTransfer(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/refs/heads/main/icons/autotransfer.png"
     # 插件版本
-    plugin_version = "1.0.18"
+    plugin_version = "1.0.19"
     # 插件作者
     plugin_author = "Dean"
     # 作者主页
@@ -443,24 +443,31 @@ class autoTransfer(_PluginBase):
                 recursive=True,
             )
             logger.info(f"源目录 {mon_path} 共发现 {len(list_files)} 个视频")
+            unique_items = {}
+
             # 遍历目录下所有文件
             for file_path in list_files:
                 logger.info(f"开始处理文件 {file_path} ...")
-                self.__handle_file(event_path=str(file_path), mon_path=mon_path)
-        logger.info("目录内所有文件整理完成！")
+                transferinfo, mediainfo, file_meta = self.__handle_file(
+                    event_path=str(file_path), mon_path=mon_path
+                )
 
-    def event_handler(self, event, mon_path: str, text: str, event_path: str):
-        """
-        处理文件变化
-        :param event: 事件
-        :param mon_path: 监控目录
-        :param text: 事件描述
-        :param event_path: 事件文件路径
-        """
-        if not event.is_directory:
-            # 文件发生变化
-            logger.debug("文件%s：%s" % (text, event_path))
-            self.__handle_file(event_path=event_path, mon_path=mon_path)
+                unique_key = Path(transferinfo.target_diritem.path)
+
+                # 存储不重复的项
+                if unique_key not in unique_items:
+                    unique_items[unique_key] = (transferinfo, mediainfo, file_meta)
+
+            # 刮削
+            if self._scrape:
+                for transferinfo, mediainfo, file_meta in unique_items.values():
+                    self.mediaChain.scrape_metadata(
+                        fileitem=transferinfo.target_diritem,
+                        meta=file_meta,
+                        mediainfo=mediainfo,
+                    )
+
+        logger.info("目录内所有文件整理完成！")
 
     def __handle_file(self, event_path: str, mon_path: str):
         """
@@ -501,7 +508,9 @@ class autoTransfer(_PluginBase):
                                 and self._transfer_type == "move"
                                 and self._move_excluded_files
                             ):
-                                self.moveFailedFilesToPath("命中过滤关键字", str(file_path))
+                                self.moveFailedFilesToPath(
+                                    "命中过滤关键字", str(file_path)
+                                )
                             return
 
                 # 整理屏蔽词不处理
@@ -523,7 +532,9 @@ class autoTransfer(_PluginBase):
                                 and self._transfer_type == "move"
                                 and self._move_excluded_files
                             ):
-                                self.moveFailedFilesToPath("命中整理屏蔽词", str(file_path))
+                                self.moveFailedFilesToPath(
+                                    "命中整理屏蔽词", str(file_path)
+                                )
                             return
 
                 # 不是媒体文件不处理
@@ -767,28 +778,6 @@ class autoTransfer(_PluginBase):
                         transferinfo=transferinfo,
                     )
 
-                # 刮削
-                if self._scrape:
-                    self.mediaChain.scrape_metadata(
-                        fileitem=transferinfo.target_diritem,
-                        meta=file_meta,
-                        mediainfo=mediainfo,
-                    )
-                """
-                {
-                    "title_year season": {
-                        "files": [
-                            {
-                                "path":,
-                                "mediainfo":,
-                                "file_meta":,
-                                "transferinfo":
-                            }
-                        ],
-                        "time": "2023-08-24 23:23:23.332"
-                    }
-                }
-                """
                 if self._notify:
                     # 发送消息汇总
                     media_list = (
@@ -884,6 +873,9 @@ class autoTransfer(_PluginBase):
                         if not files:
                             logger.warn(f"移动模式，删除空目录：{file_dir}")
                             shutil.rmtree(file_dir, ignore_errors=True)
+
+                # 返回成功的文件
+                return transferinfo, mediainfo, file_meta
 
         except Exception as e:
             logger.error("目录监控发生错误：%s - %s" % (str(e), traceback.format_exc()))
@@ -1318,10 +1310,10 @@ class autoTransfer(_PluginBase):
                                         "props": {
                                             "model": "pre_cancel_speed_limit",
                                             "label": "每次运行前取消qb限速",
-                                            "hint": "每次运行插件前强制取消下载器限速（防止意外断电后限速未恢复）"
-                                        }
+                                            "hint": "每次运行插件前强制取消下载器限速（防止意外断电后限速未恢复）",
+                                        },
                                     }
-                                ]
+                                ],
                             },
                             {
                                 "component": "VCol",
@@ -1427,10 +1419,10 @@ class autoTransfer(_PluginBase):
                                                         "props": {
                                                             "model": "move_failed_files",
                                                             "label": "移动失败文件",
-                                                            "hint": "当转移失败时移动文件"
-                                                        }
+                                                            "hint": "当转移失败时移动文件",
+                                                        },
                                                     }
-                                                ]
+                                                ],
                                             },
                                             {
                                                 "component": "VCol",
@@ -1441,16 +1433,16 @@ class autoTransfer(_PluginBase):
                                                         "props": {
                                                             "model": "move_excluded_files",
                                                             "label": "移动匹配 屏蔽词/关键字 的文件",
-                                                            "hint": "当命中过滤规则时移动文件"
-                                                        }
+                                                            "hint": "当命中过滤规则时移动文件",
+                                                        },
                                                     }
-                                                ]
-                                            }
-                                        ]
+                                                ],
+                                            },
+                                        ],
                                     }
-                                ]
-                            }
-                        ]
+                                ],
+                            },
+                        ],
                     },
                     {
                         "component": "VRow",

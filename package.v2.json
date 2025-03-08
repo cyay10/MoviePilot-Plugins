@@ -3,11 +3,12 @@
     "name": "autoTransfer",
     "description": "类似v1的目录监控，可定期整理文件",
     "labels": "autoTransfer",
-    "version": "1.0.18",
+    "version": "1.0.19",
     "icon": "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/main/icons/autotransfer.png",
     "author": "Dean",
     "level": 1,
     "history": {
+      "v1.0.19": "fix: 每处理完一集都要刮削全部 -> 处理完所有集才刮削一次全部",
       "v1.0.18": "调整界面布局和提示词",
       "v1.0.17": "界面调整",
       "v1.0.16": "增加预取消下载器限速选项",
