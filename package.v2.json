@@ -32,13 +32,14 @@
   },
   "autoSubscribe": {
     "name": "autoSubscribe",
-    "description": "(没写完别用)通过网页获取tx, iqy, youku的最新电视剧并订阅",
+    "description": "通过网页获取爱优腾的最新电视剧并订阅",
     "labels": "autoSubscribe",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "icon": "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/main/icons/autosubscribe.png",
     "author": "Dean",
     "level": 1,
     "history": {
+      "v1.0.1": "抓取到同一个电视剧的多条信息只保留第一条",
       "v1.0.0": "autoSubscribe init"
     }
   }

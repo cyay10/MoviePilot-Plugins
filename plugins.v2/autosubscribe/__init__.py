@@ -36,11 +36,11 @@ class autoSubscribe(_PluginBase):
     # 插件名称
     plugin_name = "autoSubscribe"
     # 插件描述
-    plugin_desc = "通过网页获取tx, iqy, youku的最新电视剧并订阅"
+    plugin_desc = "通过网页获取爱优腾的最新电视剧并订阅"
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/main/icons/autosubscribe.png"
     # 插件版本
-    plugin_version = "1.0.0"
+    plugin_version = "1.0.1"
     # 插件作者
     plugin_author = "Dean"
     # 作者主页
@@ -126,9 +126,9 @@ class autoSubscribe(_PluginBase):
     def random_sleep(self):
         # 生成 1 到 3 分钟之间的随机数，单位为秒
         sleep_time = random.uniform(60, 180)
+        logger.info(f"随机等待 {sleep_time} 秒后继续执行")
 
         time.sleep(sleep_time)
-        logger.info(f"随机等待 {sleep_time} 秒后继续执行")
 
     # 通用的滚动函数
     def scroll_down(self, page, selector: str):
@@ -188,6 +188,7 @@ class autoSubscribe(_PluginBase):
                 # 打开页面
                 for retry in range(5):
                     try:
+                        logger.info(f"尝试第 {retry + 1} 次加载页面：{url}")
                         page.goto(url, timeout=30000, wait_until="domcontentloaded")
                         break
                     except Exception as e:
@@ -266,9 +267,9 @@ class autoSubscribe(_PluginBase):
 
                     return len(tv_items)
 
-                # 主循环: 滚动并抓取内容
+
                 while len(tv_set) < 100:
-                    logger.info(f"不重复条目更新为: {len(tv_set)}")
+                    logger.info(f"累计抓取到 {len(tv_set)} 条数据")
                     current_count = process_items()
 
                     if len(tv_set) >= 100:
@@ -303,7 +304,7 @@ class autoSubscribe(_PluginBase):
 
         except Exception as e:
             logger.debug(f"发生错误: {str(e)}， traceback: {traceback.format_exc()}")
-            logger.info("tx的就是经常会出错")
+            logger.info("腾讯的就是经常会出错")
             return []
 
     def get_youku_tv_list(self):
@@ -345,6 +346,7 @@ class autoSubscribe(_PluginBase):
                 # 打开页面
                 for retry in range(5):
                     try:
+                        logger.info(f"尝试第 {retry + 1} 次加载页面：{url}")
                         page.goto(url, timeout=30000, wait_until="domcontentloaded")
                         break
                     except Exception as e:
@@ -393,9 +395,9 @@ class autoSubscribe(_PluginBase):
 
                     return len(tv_items)
 
-                # 主循环: 滚动并抓取内容
+
                 while len(tv_set) < 100:
-                    logger.info(f"不重复条目更新为: {len(tv_set)}")
+                    logger.info(f"累计抓取到 {len(tv_set)} 条数据")
                     current_count = process_items()
 
                     if len(tv_set) >= 100:
@@ -471,6 +473,7 @@ class autoSubscribe(_PluginBase):
                 # 打开页面
                 for retry in range(5):
                     try:
+                        logger.info(f"尝试第 {retry + 1} 次加载页面：{url}")
                         page.goto(url, timeout=30000, wait_until="domcontentloaded")
                         break
                     except Exception as e:
@@ -488,7 +491,7 @@ class autoSubscribe(_PluginBase):
                 if page.locator(
                     "div.halo_divContainer__czfwR span#text", has_text="全部剧集"
                 ).is_visible():
-                    logger.info("找到目标元素，正在点击")
+                    logger.debug("点击'全部剧集'")
                     page.locator("div.halo_divContainer__czfwR").filter(
                         has_text="全部剧集"
                     ).click()
@@ -499,6 +502,7 @@ class autoSubscribe(_PluginBase):
                 time.sleep(2)
 
                 # 等待并点击"最新"按钮
+                logger.debug("点击'最新'")
                 page.wait_for_selector("div.filmlib_itemwrap__3wgIE")
                 page.locator("div.filmlib_itemwrap__3wgIE", has_text="最新").click()
                 time.sleep(2)
@@ -545,9 +549,9 @@ class autoSubscribe(_PluginBase):
 
                     return len(tv_items)
 
-                # 主循环: 滚动并抓取内容
+
                 while len(tv_set) < 100:
-                    logger.info(f"不重复条目更新为: {len(tv_set)}")
+                    logger.info(f"累计抓取到 {len(tv_set)} 条数据")
                     current_count = process_items()
 
                     if len(tv_set) >= 100:
@@ -620,12 +624,19 @@ class autoSubscribe(_PluginBase):
             if tv_list:
                 for tv in tv_list:
                     title = tv["title"]
-                    cleaned_title = clean_title(title)  # 清理掉季数部分
+                    cleaned_title = re.sub(
+                        r"[第\s共]+[0-9一二三四五六七八九十\-\s]+季", "", title
+                    )  # 清理掉季数部分
+
                     if cleaned_title in tv_dict:
-                        # 如果已存在相同名字的条目，检查年份
-                        if tv["year"] != "0" and tv_dict[cleaned_title]["year"] == "0":
-                            # 新条目有年份而旧条目没有，替换
+                        # 已存在相同标题的条目
+                        existing_tv = tv_dict[cleaned_title]
+                        if existing_tv["year"] == "0":
+                            # 如果已存储的条目的年份是0，用新条目替换
                             tv_dict[cleaned_title] = tv
+                        else:
+                            # 如果已存储的条目的年份不是0，跳过新条目
+                            continue
                     else:
                         # 新条目，直接添加
                         tv_dict[cleaned_title] = tv
@@ -706,7 +717,7 @@ class autoSubscribe(_PluginBase):
                         seasons = recognize_result.media_info.seasons
                         status = recognize_result.media_info.status
                         logger.debug(
-                            f"'{fake_path}' 的识别结果为: '{title} ({year}) tmdb_id={tmdb_id}', 首集播出日期={first_air_date}, 最新集播出日期={last_air_date},季集={seasons},状态={status}"
+                            f"'{fake_path}' 的识别结果为: '{title} ({year}) tmdb_id={tmdb_id}', 首集播出日期={first_air_date}, 最新集播出日期={last_air_date}, 季集={seasons}, 状态={status}"
                         )
 
                         # 查询媒体库中是否存在
