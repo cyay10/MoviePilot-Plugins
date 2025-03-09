@@ -213,7 +213,7 @@ class autoTransfer(_PluginBase):
                 logger.info("autotransfer整理文件，立即运行一次")
                 self._scheduler.add_job(
                     name="autotransfer整理文件",
-                    func=self.transfer_all,
+                    func=self.main,
                     trigger="date",
                     run_date=datetime.datetime.now(tz=pytz.timezone(settings.TZ))
                     + datetime.timedelta(seconds=3),
@@ -421,53 +421,59 @@ class autoTransfer(_PluginBase):
             else:
                 logger.error("取消下载器限速失败")
 
-    def transfer_all(self):
+    def main(self):
         """
         立即运行一次
         """
-        # 执行前先取消下载器限速
-        if self._pre_cancel_speed_limit:
-            logger.info("【预取消限速】正在取消下载器限速...")
-            if self.set_download_limit(0):
-                logger.info("下载器限速已取消")
-            else:
-                logger.error("下载器限速取消失败")
+        try:
+            logger.info(f"插件{self.plugin_name} V{self.plugin_version} 开始运行")
+            # 执行前先取消下载器限速
+            if self._pre_cancel_speed_limit:
+                logger.info("【预取消限速】正在取消下载器限速...")
+                if self.set_download_limit(0):
+                    logger.info("下载器限速已取消")
+                else:
+                    logger.error("下载器限速取消失败")
 
-        # 遍历所有目录
-        for mon_path in self._dirconf.keys():
-            logger.info(f"开始处理目录 {mon_path} ...")
-            list_files = SystemUtils.list_files(
-                directory=Path(mon_path),
-                extensions=settings.RMT_MEDIAEXT,
-                min_filesize=int(self._size),
-                recursive=True,
-            )
-            logger.info(f"源目录 {mon_path} 共发现 {len(list_files)} 个视频")
-            unique_items = {}
-
-            # 遍历目录下所有文件
-            for file_path in list_files:
-                logger.info(f"开始处理文件 {file_path} ...")
-                transferinfo, mediainfo, file_meta = self.__handle_file(
-                    event_path=str(file_path), mon_path=mon_path
+            # 遍历所有目录
+            for mon_path in self._dirconf.keys():
+                logger.info(f"开始处理目录 {mon_path} ...")
+                list_files = SystemUtils.list_files(
+                    directory=Path(mon_path),
+                    extensions=settings.RMT_MEDIAEXT,
+                    min_filesize=int(self._size),
+                    recursive=True,
                 )
+                logger.info(f"源目录 {mon_path} 共发现 {len(list_files)} 个视频")
+                unique_items = {}
 
-                unique_key = Path(transferinfo.target_diritem.path)
-
-                # 存储不重复的项
-                if unique_key not in unique_items:
-                    unique_items[unique_key] = (transferinfo, mediainfo, file_meta)
-
-            # 刮削
-            if self._scrape:
-                for transferinfo, mediainfo, file_meta in unique_items.values():
-                    self.mediaChain.scrape_metadata(
-                        fileitem=transferinfo.target_diritem,
-                        meta=file_meta,
-                        mediainfo=mediainfo,
+                # 遍历目录下所有文件
+                for file_path in list_files:
+                    logger.info(f"开始处理文件 {file_path} ...")
+                    transferinfo, mediainfo, file_meta = self.__handle_file(
+                        event_path=str(file_path), mon_path=mon_path
                     )
 
-        logger.info("目录内所有文件整理完成！")
+                    unique_key = Path(transferinfo.target_diritem.path)
+
+                    # 存储不重复的项
+                    if unique_key not in unique_items:
+                        unique_items[unique_key] = (transferinfo, mediainfo, file_meta)
+
+                # 刮削
+                if self._scrape:
+                    for transferinfo, mediainfo, file_meta in unique_items.values():
+                        self.mediaChain.scrape_metadata(
+                            fileitem=transferinfo.target_diritem,
+                            meta=file_meta,
+                            mediainfo=mediainfo,
+                        )
+
+            logger.info("目录内所有文件整理完成！")
+        except Exception as e:
+            logger.error(
+                f"插件{self.plugin_name} V{self.plugin_version} 运行失败，错误信息:{e}，traceback={traceback.format_exc()}"
+            )
 
     def __handle_file(self, event_path: str, mon_path: str):
         """
@@ -976,7 +982,7 @@ class autoTransfer(_PluginBase):
                     "id": "autoTransfer",
                     "name": "类似v1的目录监控，可定期整理文件",
                     "trigger": CronTrigger.from_crontab(self._cron),
-                    "func": self.transfer_all,
+                    "func": self.main,
                     "kwargs": {},
                 }
             ]

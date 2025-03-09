@@ -36,7 +36,7 @@ class autoSubscribe(_PluginBase):
     # 插件名称
     plugin_name = "autoSubscribe"
     # 插件描述
-    plugin_desc = "通过网页获取tx, iqy, youku的最新电视剧并订阅(未完成，请勿使用)"
+    plugin_desc = "通过网页获取tx, iqy, youku的最新电视剧并订阅"
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/main/icons/autosubscribe.png"
     # 插件版本
@@ -663,7 +663,7 @@ class autoSubscribe(_PluginBase):
         立即运行一次
         """
         try:
-            logger.info("插件autoSubscribe开始运行")
+            logger.info(f"插件{self.plugin_name} V{self.plugin_version} 开始运行")
 
             tv_list = self.get_tv_list()
             # tv_list = [
@@ -882,7 +882,7 @@ class autoSubscribe(_PluginBase):
 
         except Exception as e:
             logger.error(
-                f"插件autoSubscribe运行失败，错误信息:{e}, traceback:{traceback.format_exc()}"
+                f"插件{self.plugin_name} V{self.plugin_version} 运行失败，错误信息:{e}，traceback={traceback.format_exc()}"
             )
 
     def get_state(self) -> bool:
@@ -943,7 +943,7 @@ class autoSubscribe(_PluginBase):
                                         "props": {
                                             "type": "info",
                                             "variant": "tonal",
-                                            "text": "说明: 插件每天在凌晨0-6点随机时间运行一次，\n抓取腾讯、优酷、爱奇艺的最新电视剧列表各100条，去重后根据本地是否存在，更新订阅状态或添加订阅。",
+                                            "text": "说明: 插件每天在凌晨0-6点随机时间运行一次，\n抓取腾讯、优酷、爱奇艺的最新电视剧列表各100条，去重后根据本地媒体库是否存在，更新订阅状态或添加订阅。",
                                             "style": {
                                                 "white-space": "pre-line",
                                                 "word-wrap": "break-word",
