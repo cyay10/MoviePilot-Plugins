@@ -43,9 +43,9 @@ class autoTransfer(_PluginBase):
     # 插件描述
     plugin_desc = "类似v1的目录监控，可定期整理文件"
     # 插件图标
-    plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/refs/heads/main/icons/autotransfer.png"
+    plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/main/icons/autotransfer.png"
     # 插件版本
-    plugin_version = "1.0.19"
+    plugin_version = "1.0.20"
     # 插件作者
     plugin_author = "Dean"
     # 作者主页
@@ -450,10 +450,14 @@ class autoTransfer(_PluginBase):
                 # 遍历目录下所有文件
                 for file_path in list_files:
                     logger.info(f"开始处理文件 {file_path} ...")
-                    transferinfo, mediainfo, file_meta = self.__handle_file(
+                    transfer_result = self.__handle_file(
                         event_path=str(file_path), mon_path=mon_path
                     )
+                    # 如果返回值是 None，则跳过循环(只要不是整理成功都是返回None)
+                    if transfer_result is None:
+                        continue
 
+                    transferinfo, mediainfo, file_meta = transfer_result
                     unique_key = Path(transferinfo.target_diritem.path)
 
                     # 存储不重复的项
@@ -885,6 +889,7 @@ class autoTransfer(_PluginBase):
 
         except Exception as e:
             logger.error("目录监控发生错误：%s - %s" % (str(e), traceback.format_exc()))
+            return
 
     def send_msg(self):
         """
