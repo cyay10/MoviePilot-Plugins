@@ -1102,3 +1102,9 @@ class autoSubscribe(_PluginBase):
                 self._scheduler.shutdown()
                 self._event.clear()
             self._scheduler = None
+
+# TODO: 抓取结果写入数据库的必要性? 如果随机等待时间过长，而中途容器或插件被关闭或重启，抓取结果就会丢失
+# TODO: webUI显示本插件订阅历史的必要性?
+# TODO: 每次更新或新增订阅后的随机等待时间通过webUI设置?
+# TODO: 每个来源的抓取数量100有没有必要通过webUI设置?
+# TODO: 是否有必要把抓取结果直接推送到Github，插件再统一从GitHub下载最新数据，避免抓取次数过多被针对?
