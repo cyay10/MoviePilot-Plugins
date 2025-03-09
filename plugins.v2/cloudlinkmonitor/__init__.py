@@ -57,7 +57,7 @@ class FileMonitorHandler(FileSystemEventHandler):
 
 class CloudLinkMonitor(_PluginBase):
     # 插件名称
-    plugin_name = "目录实时监控"
+    plugin_name = "我的目录实时监控"
     # 插件描述
     plugin_desc = "监控目录文件变化，自动转移媒体文件。"
     # 插件图标
@@ -592,8 +592,8 @@ class CloudLinkMonitor(_PluginBase):
                             break
                         files = SystemUtils.list_files(file_dir, settings.RMT_MEDIAEXT + settings.DOWNLOAD_TMPEXT)
                         if not files:
-                            logger.warn(f"移动模式，删除空目录：{file_dir}")
-                            shutil.rmtree(file_dir, ignore_errors=True)
+                            logger.warn(f"移动模式，不删除空目录：{file_dir}")
+                          # shutil.rmtree(file_dir, ignore_errors=True)
 
         except Exception as e:
             logger.error("目录监控发生错误：%s - %s" % (str(e), traceback.format_exc()))
