@@ -147,7 +147,7 @@ class autoSubscribe(_PluginBase):
                 }}
                 """
             )
-            time.sleep(1)
+            time.sleep(random.randint(1, 10))
 
     def get_qq_tv_list(self) -> List:
         try:
