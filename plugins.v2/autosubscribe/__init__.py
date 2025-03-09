@@ -40,7 +40,7 @@ class autoSubscribe(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/main/icons/autosubscribe.png"
     # 插件版本
-    plugin_version = "1.0.1"
+    plugin_version = "1.0.2"
     # 插件作者
     plugin_author = "Dean"
     # 作者主页
@@ -72,6 +72,7 @@ class autoSubscribe(_PluginBase):
         self.tmdbchain = TmdbChain()
         self.mediacahin = MediaChain()
         self.subchain = SubscribeChain()
+        self.subscribeoper = SubscribeOper()
         # 清空配置
         self._dirconf = {}
         self._transferconf = {}
@@ -267,7 +268,6 @@ class autoSubscribe(_PluginBase):
 
                     return len(tv_items)
 
-
                 while len(tv_set) < 100:
                     logger.info(f"累计抓取到 {len(tv_set)} 条数据")
                     current_count = process_items()
@@ -394,7 +394,6 @@ class autoSubscribe(_PluginBase):
                             continue
 
                     return len(tv_items)
-
 
                 while len(tv_set) < 100:
                     logger.info(f"累计抓取到 {len(tv_set)} 条数据")
@@ -548,7 +547,6 @@ class autoSubscribe(_PluginBase):
                             continue
 
                     return len(tv_items)
-
 
                 while len(tv_set) < 100:
                     logger.info(f"累计抓取到 {len(tv_set)} 条数据")
@@ -802,7 +800,6 @@ class autoSubscribe(_PluginBase):
                                     """
 
                                     # 查询是否已经存在订阅
-                                    self.subscribeoper = SubscribeOper()
 
                                     exists = self.subscribeoper.exists(
                                         tmdbid=tmdb_id,
@@ -872,22 +869,39 @@ class autoSubscribe(_PluginBase):
 
             # 批量更新订阅状态
             for subscribe in subscribe_update_list:
-
                 old_subscribe_dict = subscribe.to_dict()
+                logger.info(
+                    f"开始更新订阅状态：电视剧:'{title} ({year})', tmdb_id={tmdb_id}, Season={season_number}, 订阅id={subscribe.id}"
+                )
 
                 # 更新为N在下次 新增订阅搜索 的时候搜索
-                subscribe.update(db, {"state": "N"})
+                try:
+                    # 遇到过报错'0 were matched'，故先查下表
+                    exists = self.subscribeoper.exists(
+                        tmdbid=subscribe.tmdbid,
+                        season=subscribe.season,
+                    )
+                    if not exists:
+                        continue
 
-                # 发送订阅调整事件
-                eventmanager.send_event(
-                    EventType.SubscribeModified,
-                    {
-                        "subscribe_id": subscribe.id,
-                        "old_subscribe_info": old_subscribe_dict,
-                        "subscribe_info": subscribe.to_dict(),
-                    },
-                )
-                self.random_sleep()
+                    subscribe.update(db, {"state": "N"})
+                    logger.info(
+                        f"更新订阅状态成功：电视剧:'{title} ({year})', tmdb_id={tmdb_id}, Season={season_number}, 订阅id={subscribe.id}"
+                    )
+                    # 发送订阅调整事件
+                    eventmanager.send_event(
+                        EventType.SubscribeModified,
+                        {
+                            "subscribe_id": subscribe.id,
+                            "old_subscribe_info": old_subscribe_dict,
+                            "subscribe_info": subscribe.to_dict(),
+                        },
+                    )
+                    self.random_sleep()
+                except Exception as e:
+                    logger.error(
+                        f"插件autoSubscribe更新订阅状态失败，电视剧:'{title} ({year})', tmdb_id={tmdb_id}, Season{season_number}, 订阅id={subscribe.id}, 错误信息：{e}, traceback：{traceback.format_exc()}"
+                    )
 
             logger.info("插件autoSubscribe运行完成")
 
