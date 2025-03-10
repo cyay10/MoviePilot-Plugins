@@ -698,14 +698,14 @@ class autoSubscribe(_PluginBase):
                         f"处理抓取到的条目: {tv['title']}, 更新状态: {tv['status']}, 年份: {tv['year']}"
                     )
                     # 识别
-                    fake_path = (
+                    fake_path_1 = (
                         f"{tv['title']} ({tv['year']})"
                         if tv["year"] != "0"
                         else tv["title"]
                     )
                     # 面向结果编程 e.g. '白鹿原 (2012) {[mtype=tv]}'
-                    fake_path = f"{fake_path} {{[mtype=tv]}}"
-                    recognize_result = self.mediacahin.recognize_by_path(fake_path)
+                    fake_path_2 = f"{fake_path_1} {{[mtype=tv]}}"
+                    recognize_result = self.mediacahin.recognize_by_path(fake_path_2)
                     if recognize_result.media_info is not None:
                         tmdb_id = recognize_result.media_info.tmdb_id
                         title = recognize_result.media_info.title
@@ -715,7 +715,7 @@ class autoSubscribe(_PluginBase):
                         seasons = recognize_result.media_info.seasons
                         status = recognize_result.media_info.status
                         logger.debug(
-                            f"'{fake_path}' 的识别结果为: '{title} ({year}) tmdb_id={tmdb_id}', 首集播出日期={first_air_date}, 最新集播出日期={last_air_date}, 季集={seasons}, 状态={status}"
+                            f"'{fake_path_1}' 的识别结果为: '{title} ({year}) tmdb_id={tmdb_id}', 首集播出日期={first_air_date}, 最新集播出日期={last_air_date}, 季集={seasons}, 状态={status}"
                         )
 
                         # 查询媒体库中是否存在
@@ -861,7 +861,7 @@ class autoSubscribe(_PluginBase):
                                             self.random_sleep()
                                     # end: 不管是某季缺少的是不是全部，处理都一样，更新订阅状态或添加订阅
                     else:
-                        logger.info(f"{fake_path} 识别不出，跳过")
+                        logger.info(f"{fake_path_1} 识别不出，跳过")
                 except Exception as e:
                     logger.error(
                         f"插件autoSubscribe遍历列表出错，错误信息：{e}, traceback：{traceback.format_exc()}"
