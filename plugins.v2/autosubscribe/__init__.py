@@ -40,7 +40,7 @@ class autoSubscribe(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/main/icons/autosubscribe.png"
     # 插件版本
-    plugin_version = "1.0.2"
+    plugin_version = "1.0.3"
     # 插件作者
     plugin_author = "Dean"
     # 作者主页
@@ -496,7 +496,7 @@ class autoSubscribe(_PluginBase):
                     ).click()
                 else:
                     logger.info("未找到目标元素")
-                    return None
+                    return []
 
                 time.sleep(2)
 
@@ -589,23 +589,23 @@ class autoSubscribe(_PluginBase):
     def get_tv_list(self) -> List:
         # 获取腾讯视频电视剧列表
         logger.info("开始获取腾讯视频电视剧列表")
-        qq_tv_list = self.get_qq_tv_list()
+        qq_tv_list = self.get_qq_tv_list() or []
         if len(qq_tv_list) == 0:
-            qq_tv_list = self.get_qq_tv_list()
+            qq_tv_list = self.get_qq_tv_list() or []
         logger.info(f"腾讯视频电视剧列表获取完成，共获取到{len(qq_tv_list)}条信息")
 
         # 获取优酷视频电视剧列表
         logger.info("开始获取优酷视频电视剧列表")
-        youku_tv_list = self.get_youku_tv_list()
+        youku_tv_list = self.get_youku_tv_list() or []
         if len(youku_tv_list) == 0:
-            youku_tv_list = self.get_youku_tv_list()
+            youku_tv_list = self.get_youku_tv_list() or []
         logger.info(f"优酷视频电视剧列表获取完成，共获取到{len(youku_tv_list)}条信息")
 
         # 获取爱奇艺视频电视剧列表
         logger.info("开始获取爱奇艺视频电视剧列表")
-        iqiyi_tv_list = self.get_iqiyi_tv_list()
+        iqiyi_tv_list = self.get_iqiyi_tv_list() or []
         if len(iqiyi_tv_list) == 0:
-            iqiyi_tv_list = self.get_iqiyi_tv_list()
+            iqiyi_tv_list = self.get_iqiyi_tv_list() or []
         logger.info(f"爱奇艺视频电视剧列表获取完成，共获取到{len(iqiyi_tv_list)}条信息")
 
         # 合并三个列表并根据名字去重，优先保留有年份的
@@ -1102,6 +1102,7 @@ class autoSubscribe(_PluginBase):
                 self._scheduler.shutdown()
                 self._event.clear()
             self._scheduler = None
+
 
 # TODO: 抓取结果写入数据库的必要性? 如果随机等待时间过长，而中途容器或插件被关闭或重启，抓取结果就会丢失
 # TODO: webUI显示本插件订阅历史的必要性?
