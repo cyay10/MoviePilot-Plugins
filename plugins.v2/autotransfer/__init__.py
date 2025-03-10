@@ -436,8 +436,8 @@ class autoTransfer(_PluginBase):
                     logger.error("下载器限速取消失败")
 
             # 遍历所有目录
-            for mon_path in self._dirconf.keys():
-                logger.info(f"开始处理目录 {mon_path} ...")
+            for idx, mon_path in enumerate(self._dirconf.keys(), start=1):
+                logger.info(f"开始处理目录({idx}/{len(self._dirconf)}): {mon_path} ...")
                 list_files = SystemUtils.list_files(
                     directory=Path(mon_path),
                     extensions=settings.RMT_MEDIAEXT,
@@ -453,8 +453,11 @@ class autoTransfer(_PluginBase):
                     transfer_result = self.__handle_file(
                         event_path=str(file_path), mon_path=mon_path
                     )
-                    # 如果返回值是 None，则跳过循环(只要不是整理成功都是返回None)
+                    # 如果返回值是 None，则跳过
                     if transfer_result is None:
+                        logger.debug(
+                            f"处理文件 {file_path} 时，__handle_file 返回了 None，只要不是整理成功都是返回None"
+                        )
                         continue
 
                     transferinfo, mediainfo, file_meta = transfer_result
@@ -1573,5 +1576,6 @@ class autoTransfer(_PluginBase):
                 self._scheduler.shutdown()
                 self._event.clear()
             self._scheduler = None
+
 
 # TODO: 考虑在表plugindata中储存限速状态，防止容器或插件意外退出后没有恢复原速度，有这个就可以删除开关`每次运行前取消qb限速`了
