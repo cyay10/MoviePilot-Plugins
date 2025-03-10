@@ -692,10 +692,10 @@ class autoSubscribe(_PluginBase):
             # ]
             subscribe_update_list = []
             db = ScopedSession()
-            for tv in tv_list:
+            for idx, tv in enumerate(tv_list, start=1):
                 try:
                     logger.info(
-                        f"处理抓取到的条目: {tv['title']}, 更新状态: {tv['status']}, 年份: {tv['year']}"
+                        f"处理抓取到的条目({idx}/{len(tv_list)}): {tv['title']}, 更新状态: {tv['status']}, 年份: {tv['year']}"
                     )
                     # 识别
                     fake_path_1 = (
@@ -752,12 +752,12 @@ class autoSubscribe(_PluginBase):
                                         <= datetime.now().strftime("%Y-%m-%d")
                                     ):
                                         logger.debug(
-                                            f"电视剧:'{title} ({year}) tmdb_id={tmdb_id}'最新集的air_date={last_air_date}小于等于当前日期，开始更新订阅状态或添加新订阅"
+                                            f"电视剧:'{title} ({year}) tmdb_id={tmdb_id}'最新集的air_date={last_air_date}, 小于等于当前日期, 开始更新订阅状态或添加新订阅"
                                         )
                                         need_search_again = True
                                     else:
                                         logger.debug(
-                                            f"电视剧:'{title} ({year}) tmdb_id={tmdb_id}'最新一集的播出日期={last_air_date}大于当前日期或不存在，跳过"
+                                            f"电视剧:'{title} ({year}) tmdb_id={tmdb_id}'最新集的播出日期={last_air_date}, 大于当前日期或不存在, 跳过"
                                         )
                                 else:  # 某季中缺少的集不为: 全部
                                     episode_list = ", ".join(
@@ -769,7 +769,7 @@ class autoSubscribe(_PluginBase):
                                         for episode in episode_list.split(",")
                                     ]
                                     episode_list.sort()  # 从小到大排序
-                                    log_msg += f"第 {season_number} 季中缺少的单集为: {episode_list}\n"
+                                    log_msg += f"第{season_number}季中缺少的单集为: {episode_list}\n"
                                     logger.debug(log_msg)
 
                                     last_air_date = (
@@ -807,7 +807,7 @@ class autoSubscribe(_PluginBase):
                                     )
                                     if exists:
                                         logger.debug(
-                                            f"电视剧:'{title} ({year}) tmdb_id={tmdb_id}' Season{season_number}已经存在订阅，开始更新订阅状态"
+                                            f"电视剧:'{title} ({year}) tmdb_id={tmdb_id}' 第{season_number}季已经存在订阅, 判断是否需要更新订阅状态"
                                         )
 
                                         # 更新state
@@ -835,7 +835,7 @@ class autoSubscribe(_PluginBase):
                                             subscribe = Subscribe.get(db, subscribe_id)
                                             subscribe_update_list.append(subscribe)
                                             logger.info(
-                                                f"已添加到待更新订阅状态列表：电视剧:'{title} ({year})', tmdb_id={tmdb_id}, Season{season_number}, 订阅id={subscribe_id}"
+                                                f"已添加到待更新订阅状态列表: 电视剧:'{title} ({year})', tmdb_id={tmdb_id}, Season={season_number}, 订阅id={subscribe_id}"
                                             )
                                         else:
                                             logger.info(
@@ -868,10 +868,10 @@ class autoSubscribe(_PluginBase):
                     )
 
             # 批量更新订阅状态
-            for subscribe in subscribe_update_list:
+            for idx, subscribe in enumerate(subscribe_update_list, start=1):
                 old_subscribe_dict = subscribe.to_dict()
                 logger.info(
-                    f"开始更新订阅状态：电视剧:'{title} ({year})', tmdb_id={tmdb_id}, Season={season_number}, 订阅id={subscribe.id}"
+                    f"开始更新订阅状态({idx}/{len(subscribe_update_list)}): 电视剧:'{title} ({year})', tmdb_id={tmdb_id}, Season={season_number}, 订阅id={subscribe.id}"
                 )
 
                 # 更新为N在下次 新增订阅搜索 的时候搜索
@@ -886,7 +886,7 @@ class autoSubscribe(_PluginBase):
 
                     subscribe.update(db, {"state": "N"})
                     logger.info(
-                        f"更新订阅状态成功：电视剧:'{title} ({year})', tmdb_id={tmdb_id}, Season={season_number}, 订阅id={subscribe.id}"
+                        f"更新订阅状态成功: 电视剧:'{title} ({year})', tmdb_id={tmdb_id}, Season={season_number}, 订阅id={subscribe.id}, 将会在下次 新增订阅搜索 时搜索下载"
                     )
                     # 发送订阅调整事件
                     eventmanager.send_event(
@@ -900,7 +900,7 @@ class autoSubscribe(_PluginBase):
                     self.random_sleep()
                 except Exception as e:
                     logger.error(
-                        f"插件autoSubscribe更新订阅状态失败，电视剧:'{title} ({year})', tmdb_id={tmdb_id}, Season{season_number}, 订阅id={subscribe.id}, 错误信息：{e}, traceback：{traceback.format_exc()}"
+                        f"插件autoSubscribe更新订阅状态失败，电视剧: '{title} ({year})', tmdb_id={tmdb_id}, Season{season_number}, 订阅id={subscribe.id}, 错误信息：{e}, traceback：{traceback.format_exc()}"
                     )
 
             logger.info("插件autoSubscribe运行完成")
