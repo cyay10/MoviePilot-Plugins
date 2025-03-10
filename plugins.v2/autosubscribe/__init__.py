@@ -40,7 +40,7 @@ class autoSubscribe(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/main/icons/autosubscribe.png"
     # 插件版本
-    plugin_version = "1.0.3"
+    plugin_version = "1.0.4"
     # 插件作者
     plugin_author = "Dean"
     # 作者主页
@@ -676,6 +676,7 @@ class autoSubscribe(_PluginBase):
 
             tv_list = self.get_tv_list()
             # tv_list = [
+            #     {"title": "一梦枕星河", "status": "", "year": "2024"},
             #     {"title": "白鹿原", "status": "", "year": "2012"},
             #     {"title": "生活大爆炸 第二季", "status": "", "year": "0"},
             #     {"title": "乡村爱情17", "status": "", "year": "0"},
@@ -867,26 +868,31 @@ class autoSubscribe(_PluginBase):
                         f"插件autoSubscribe遍历列表出错，错误信息：{e}, traceback：{traceback.format_exc()}"
                     )
 
-            # 批量更新订阅状态
+            # 批量更新订阅状态为N, 在下次 新增订阅搜索 的时候自动搜索下载
             for idx, subscribe in enumerate(subscribe_update_list, start=1):
-                old_subscribe_dict = subscribe.to_dict()
-                logger.info(
-                    f"开始更新订阅状态({idx}/{len(subscribe_update_list)}): 电视剧:'{title} ({year})', tmdb_id={tmdb_id}, Season={season_number}, 订阅id={subscribe.id}"
-                )
-
-                # 更新为N在下次 新增订阅搜索 的时候搜索
                 try:
                     # 遇到过报错'0 were matched'，故先查下表
                     exists = self.subscribeoper.exists(
                         tmdbid=subscribe.tmdbid,
                         season=subscribe.season,
                     )
+
                     if not exists:
                         continue
 
+                    old_subscribe_dict = subscribe.to_dict()
+                    name_and_year = (
+                        f"{subscribe.name} ({subscribe.year})"
+                        if subscribe.year and subscribe.name
+                        else "None"
+                    )
+
+                    logger.info(
+                        f"开始更新订阅状态({idx}/{len(subscribe_update_list)}): 电视剧:'{name_and_year}', tmdb_id={subscribe.tmdbid}, Season={subscribe.season}, 订阅id={subscribe.id}"
+                    )
                     subscribe.update(db, {"state": "N"})
                     logger.info(
-                        f"更新订阅状态成功: 电视剧:'{title} ({year})', tmdb_id={tmdb_id}, Season={season_number}, 订阅id={subscribe.id}, 将会在下次 新增订阅搜索 时搜索下载"
+                        f"更新订阅状态成功({idx}/{len(subscribe_update_list)}): 电视剧:'{name_and_year}', tmdb_id={subscribe.tmdbid}, Season={subscribe.season}, 订阅id={subscribe.id}, 将会在下次 新增订阅搜索 时搜索下载"
                     )
                     # 发送订阅调整事件
                     eventmanager.send_event(
@@ -900,7 +906,7 @@ class autoSubscribe(_PluginBase):
                     self.random_sleep()
                 except Exception as e:
                     logger.error(
-                        f"插件autoSubscribe更新订阅状态失败，电视剧: '{title} ({year})', tmdb_id={tmdb_id}, Season{season_number}, 订阅id={subscribe.id}, 错误信息：{e}, traceback：{traceback.format_exc()}"
+                        f"插件autoSubscribe更新订阅状态失败，subscribe={subscribe.__dict__}, 错误信息：{e}, traceback：{traceback.format_exc()}"
                     )
 
             logger.info("插件autoSubscribe运行完成")
@@ -968,7 +974,7 @@ class autoSubscribe(_PluginBase):
                                         "props": {
                                             "type": "info",
                                             "variant": "tonal",
-                                            "text": "说明: 插件每天在凌晨0-6点随机时间运行一次，\n抓取腾讯、优酷、爱奇艺的最新电视剧列表各100条，去重后根据本地媒体库是否存在，更新订阅状态或添加订阅。",
+                                            "text": "说明: 插件每天在凌晨0-6点随机时间运行一次，\n抓取爱优腾的最新电视剧列表各100条，去重后根据本地媒体库是否存在，更新订阅状态或添加订阅。",
                                             "style": {
                                                 "white-space": "pre-line",
                                                 "word-wrap": "break-word",
@@ -1031,54 +1037,6 @@ class autoSubscribe(_PluginBase):
                                     }
                                 ],
                             },
-                        ],
-                    },
-                    {
-                        "component": "VRow",
-                        "content": [
-                            {
-                                "component": "VCol",
-                                "props": {"cols": 12},
-                                "content": [
-                                    {
-                                        "component": "VCol",
-                                        "props": {"cols": 12},
-                                        "content": [
-                                            {
-                                                "component": "VProgressLinear",
-                                            }
-                                        ],
-                                    }
-                                ],
-                            },
-                        ],
-                    },
-                    {
-                        "component": "VRow",
-                        "content": [
-                            {
-                                "component": "VCol",
-                                "props": {
-                                    "cols": 12,
-                                },
-                                "content": [
-                                    {
-                                        "component": "VAlert",
-                                        "props": {
-                                            "type": "info",
-                                            "variant": "tonal",
-                                            "text": "插件说明",
-                                            "style": {
-                                                "white-space": "pre-line",
-                                                "word-wrap": "break-word",
-                                                "height": "auto",
-                                                "max-height": "500px",
-                                                "overflow-y": "auto",
-                                            },
-                                        },
-                                    }
-                                ],
-                            }
                         ],
                     },
                 ],
