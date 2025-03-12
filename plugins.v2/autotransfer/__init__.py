@@ -448,8 +448,10 @@ class autoTransfer(_PluginBase):
                 unique_items = {}
 
                 # 遍历目录下所有文件
-                for file_path in list_files:
-                    logger.info(f"开始处理文件 {file_path} ...")
+                for idx, file_path in enumerate(list_files, start=1):
+                    logger.info(
+                        f"开始处理文件({idx}/{len(list_files)}): {file_path} ..."
+                    )
                     transfer_result = self.__handle_file(
                         event_path=str(file_path), mon_path=mon_path
                     )
