@@ -294,9 +294,9 @@ class autoSubscribe(_PluginBase):
                     {"title": title, "status": status, "year": year}
                     for title, status, year in list(tv_set)[:100]
                 ]
-                for tv in tv_list:
+                for idx, tv in enumerate(tv_list, start=1):
                     logger.info(
-                        f"剧名: {tv['title']}, 更新状态: {tv['status']}, 年份: {tv['year']}"
+                        f"腾讯视频({idx}/{len(tv_list)}): 剧名: {tv['title']}, 更新状态: {tv['status']}, 年份: {tv['year']}"
                     )
 
                 browser.close()
@@ -421,9 +421,9 @@ class autoSubscribe(_PluginBase):
                     {"title": title, "status": status, "year": year}
                     for title, status, year in list(tv_set)[:100]
                 ]
-                for tv in tv_list:
+                for idx, tv in enumerate(tv_list, start=1):
                     logger.info(
-                        f"剧名: {tv['title']}, 更新状态: {tv['status']}, 年份: {tv['year']}"
+                        f"优酷视频({idx}/{len(tv_list)}): 剧名: {tv['title']}, 更新状态: {tv['status']}, 年份: {tv['year']}"
                     )
 
                 browser.close()
@@ -574,9 +574,9 @@ class autoSubscribe(_PluginBase):
                     {"title": title, "status": status, "year": year}
                     for title, status, year in list(tv_set)[:100]
                 ]
-                for tv in tv_list:
+                for idx, tv in enumerate(tv_list, start=1):
                     logger.info(
-                        f"剧名: {tv['title']}, 更新状态: {tv['status']}, 年份: {tv['year']}"
+                        f"爱奇艺({idx}/{len(tv_list)}): 剧名: {tv['title']}, 更新状态: {tv['status']}, 年份: {tv['year']}"
                     )
 
                 browser.close()
@@ -643,13 +643,12 @@ class autoSubscribe(_PluginBase):
         all_tv_list = list(tv_dict.values())
 
         # 打印合并后的结果
-        logger.info(f"合并后的电视剧列表,去重后有: {len(all_tv_list)}条")
-        for tv in all_tv_list:
+        for idx, tv in enumerate(all_tv_list, start=1):
             # 删除剧名中的`[普通话版]`
             tv["title"] = tv["title"].replace("[普通话版]", "")
 
             logger.info(
-                f"剧名: {tv['title']}, 更新状态: {tv['status']}, 年份: {tv['year']}"
+                f"总列表({idx}/{len(all_tv_list)}): 剧名: {tv['title']}, 更新状态: {tv['status']}, 年份: {tv['year']}"
             )
 
         return all_tv_list
