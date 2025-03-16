@@ -770,7 +770,7 @@ class autoSubscribe(_PluginBase):
                                         for episode in episode_list.split(",")
                                     ]
                                     episode_list.sort()  # 从小到大排序
-                                    log_msg += f"第{season_number}季中缺少的单集为: {episode_list}\n"
+                                    log_msg += f"第{season_number}季中缺少的单集为: {episode_list}"
                                     logger.debug(log_msg)
 
                                     last_air_date = (
