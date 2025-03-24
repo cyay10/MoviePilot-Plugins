@@ -1092,3 +1092,4 @@ class autoSubscribe(_PluginBase):
 # TODO: webUI显示本插件订阅历史的必要性?
 # TODO: 每次更新或新增订阅后的随机等待时间通过webUI设置?
 # TODO: 是否有必要把抓取结果直接推送到Github，插件再统一从GitHub下载最新数据，避免抓取次数过多被针对?
+# TODO: 芒果tv先不搞，观察一段时间，感觉都是短剧，tmdb没有信息: https://www.mgtv.com/lib/2?lastp=list_index&lastp=ch_tv&kind=a1&area=a1&year=all&sort=c1&chargeInfo=a1&fpa=2912
