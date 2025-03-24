@@ -40,7 +40,7 @@ class autoSubscribe(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/main/icons/autosubscribe.png"
     # 插件版本
-    plugin_version = "1.0.5"
+    plugin_version = "1.0.6"
     # 插件作者
     plugin_author = "Dean"
     # 作者主页
@@ -64,6 +64,8 @@ class autoSubscribe(_PluginBase):
     # 存储源目录转移方式
     _transferconf: Dict[str, Optional[str]] = {}
     _overwrite_mode: Dict[str, Optional[str]] = {}
+    # 每次获取的电视剧数量
+    _tv_limit: int = 100
     # 退出事件
     _event = threading.Event()
 
@@ -82,6 +84,7 @@ class autoSubscribe(_PluginBase):
         if config:
             self._enabled = config.get("enabled")
             self._onlyonce = config.get("onlyonce")
+            self._tv_limit = config.get("tv_limit", 100)
 
         # 停止现有任务
         self.stop_service()
@@ -121,6 +124,7 @@ class autoSubscribe(_PluginBase):
             {
                 "enabled": self._enabled,
                 "onlyonce": self._onlyonce,
+                "tv_limit": self._tv_limit,
             }
         )
 
@@ -268,11 +272,11 @@ class autoSubscribe(_PluginBase):
 
                     return len(tv_items)
 
-                while len(tv_set) < 100:
+                while len(tv_set) < self._tv_limit:
                     logger.info(f"累计抓取到 {len(tv_set)} 条数据")
                     current_count = process_items()
 
-                    if len(tv_set) >= 100:
+                    if len(tv_set) >= self._tv_limit:
                         break
 
                     self.scroll_down(page, "div.grid__item")
@@ -292,7 +296,7 @@ class autoSubscribe(_PluginBase):
                 # 转换集合为列表并打印结果
                 tv_list = [
                     {"title": title, "status": status, "year": year}
-                    for title, status, year in list(tv_set)[:100]
+                    for title, status, year in list(tv_set)[:self._tv_limit]
                 ]
                 for idx, tv in enumerate(tv_list, start=1):
                     logger.info(
@@ -395,11 +399,11 @@ class autoSubscribe(_PluginBase):
 
                     return len(tv_items)
 
-                while len(tv_set) < 100:
+                while len(tv_set) < self._tv_limit:
                     logger.info(f"累计抓取到 {len(tv_set)} 条数据")
                     current_count = process_items()
 
-                    if len(tv_set) >= 100:
+                    if len(tv_set) >= self._tv_limit:
                         break
 
                     self.scroll_down(page, "div.categorypack_yk_pack_v")
@@ -419,7 +423,7 @@ class autoSubscribe(_PluginBase):
                 # 转换集合为列表并打印结果
                 tv_list = [
                     {"title": title, "status": status, "year": year}
-                    for title, status, year in list(tv_set)[:100]
+                    for title, status, year in list(tv_set)[:self._tv_limit]
                 ]
                 for idx, tv in enumerate(tv_list, start=1):
                     logger.info(
@@ -550,11 +554,11 @@ class autoSubscribe(_PluginBase):
 
                     return len(tv_items)
 
-                while len(tv_set) < 100:
+                while len(tv_set) < self._tv_limit:
                     logger.info(f"累计抓取到 {len(tv_set)} 条数据")
                     current_count = process_items()
 
-                    if len(tv_set) >= 100:
+                    if len(tv_set) >= self._tv_limit:
                         break
 
                     self.scroll_down(page, "div.tiles-item_container__OaNPB")
@@ -574,7 +578,7 @@ class autoSubscribe(_PluginBase):
                 # 转换集合为列表并打印结果
                 tv_list = [
                     {"title": title, "status": status, "year": year}
-                    for title, status, year in list(tv_set)[:100]
+                    for title, status, year in list(tv_set)[:self._tv_limit]
                 ]
                 for idx, tv in enumerate(tv_list, start=1):
                     logger.info(
@@ -975,7 +979,7 @@ class autoSubscribe(_PluginBase):
                                         "props": {
                                             "type": "info",
                                             "variant": "tonal",
-                                            "text": "说明: 插件每天在凌晨0-6点随机时间运行一次，\n抓取爱优腾的最新电视剧列表各100条，去重后根据本地媒体库是否存在，更新订阅状态或添加订阅。",
+                                            "text": "说明: 插件每天在凌晨0-6点随机时间运行一次，\n分别抓取指定数量个爱优腾的最新电视剧（如设置了100，则总共抓取300个电视剧），去重后根据本地媒体库是否存在，更新订阅状态或添加订阅。",
                                             "style": {
                                                 "white-space": "pre-line",
                                                 "word-wrap": "break-word",
@@ -1038,6 +1042,25 @@ class autoSubscribe(_PluginBase):
                                     }
                                 ],
                             },
+                            {
+                                "component": "VCol",
+                                "props": {"cols": 12, "md": 3},
+                                "content": [
+                                    {
+                                        "component": "VSlider",
+                                        "props": {
+                                            "model": "tv_limit",
+                                            "label": "每个来源的获取数量",
+                                            "min": 1,
+                                            "max": 500,
+                                            "step": 1,
+                                            "thumb-label": "always",
+                                            "hide-details": "false",
+                                            "style": "width: 350px"
+                                        },
+                                    }
+                                ],
+                            },
                         ],
                     },
                 ],
@@ -1045,6 +1068,7 @@ class autoSubscribe(_PluginBase):
         ], {
             "enabled": False,
             "onlyonce": False,
+            "tv_limit": 100,
         }
 
     def get_page(self) -> List[dict]:
