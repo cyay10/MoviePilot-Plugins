@@ -426,7 +426,7 @@ class autoTransfer(_PluginBase):
         立即运行一次
         """
         try:
-            logger.info(f"插件{self.plugin_name} V{self.plugin_version} 开始运行")
+            logger.info(f"插件{self.plugin_name} v{self.plugin_version} 开始运行")
             # 执行前先取消下载器限速
             if self._pre_cancel_speed_limit:
                 logger.info("【预取消限速】正在取消下载器限速...")

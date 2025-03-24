@@ -677,7 +677,7 @@ class autoSubscribe(_PluginBase):
         立即运行一次
         """
         try:
-            logger.info(f"插件{self.plugin_name} V{self.plugin_version} 开始运行")
+            logger.info(f"插件{self.plugin_name} v{self.plugin_version} 开始运行")
 
             tv_list = self.get_tv_list()
             # tv_list = [
