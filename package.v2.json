@@ -35,11 +35,12 @@
     "name": "autoSubscribe",
     "description": "通过网页获取爱优腾的最新电视剧并订阅",
     "labels": "autoSubscribe",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "icon": "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/main/icons/autosubscribe.png",
     "author": "Dean",
     "level": 1,
     "history": {
+      "v1.0.5": "fix: 爱奇艺经常加载不出 增加随机延迟",
       "v1.0.4": "fix: 更新订阅状态时的日志显示错误",
       "v1.0.3": "fix: get_iqiyi_tv_list返回的不总是列表",
       "v1.0.2": "fix: 更新订阅状态出错导致本插件停止运行",

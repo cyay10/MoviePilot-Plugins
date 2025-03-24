@@ -40,7 +40,7 @@ class autoSubscribe(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/main/icons/autosubscribe.png"
     # 插件版本
-    plugin_version = "1.0.4"
+    plugin_version = "1.0.5"
     # 插件作者
     plugin_author = "Dean"
     # 作者主页
@@ -474,6 +474,8 @@ class autoSubscribe(_PluginBase):
                     try:
                         logger.info(f"尝试第 {retry + 1} 次加载页面：{url}")
                         page.goto(url, timeout=30000, wait_until="domcontentloaded")
+                        logger.debug("爱奇艺有可能作妖，随机等待5-20秒")
+                        time.sleep(random.uniform(5, 20))
                         break
                     except Exception as e:
                         logger.info(
@@ -483,10 +485,10 @@ class autoSubscribe(_PluginBase):
                             logger.info("页面加载失败次数达到上限，返回空结果")
                             browser.close()
                             return []
-                        time.sleep(2)
+                        logger.debug("爱奇艺有可能作妖，随机等待5-20秒")
+                        time.sleep(random.uniform(5, 20))
 
                 # 等待并点击"全部剧集"按钮
-
                 if page.locator(
                     "div.halo_divContainer__czfwR span#text", has_text="全部剧集"
                 ).is_visible():
@@ -497,8 +499,8 @@ class autoSubscribe(_PluginBase):
                 else:
                     logger.info("未找到目标元素")
                     return []
-
-                time.sleep(2)
+                logger.debug("爱奇艺有可能作妖，随机等待5-20秒")
+                time.sleep(random.uniform(5, 20))
 
                 # 等待并点击"最新"按钮
                 logger.debug("点击'最新'")
