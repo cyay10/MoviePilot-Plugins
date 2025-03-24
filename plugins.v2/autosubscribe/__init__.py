@@ -151,7 +151,8 @@ class autoSubscribe(_PluginBase):
                 }}
                 """
             )
-            time.sleep(random.randint(1, 10))
+            logger.info(f"滚动前随机等待6-40秒")
+            time.sleep(random.randint(6, 40))
 
     def get_qq_tv_list(self) -> List:
         try:
