@@ -594,6 +594,20 @@ class autoSubscribe(_PluginBase):
             return []
 
     def get_tv_list(self) -> List:
+        # 获取爱奇艺视频电视剧列表
+        logger.info("开始获取爱奇艺视频电视剧列表")
+        iqiyi_tv_list = self.get_iqiyi_tv_list() or []
+        if len(iqiyi_tv_list) == 0:
+            iqiyi_tv_list = self.get_iqiyi_tv_list() or []
+        logger.info(f"爱奇艺视频电视剧列表获取完成，共获取到{len(iqiyi_tv_list)}条信息")
+        
+        # 获取优酷视频电视剧列表
+        logger.info("开始获取优酷视频电视剧列表")
+        youku_tv_list = self.get_youku_tv_list() or []
+        if len(youku_tv_list) == 0:
+            youku_tv_list = self.get_youku_tv_list() or []
+        logger.info(f"优酷视频电视剧列表获取完成，共获取到{len(youku_tv_list)}条信息")
+        
         # 获取腾讯视频电视剧列表
         logger.info("开始获取腾讯视频电视剧列表")
         qq_tv_list = self.get_qq_tv_list() or []
@@ -601,19 +615,6 @@ class autoSubscribe(_PluginBase):
             qq_tv_list = self.get_qq_tv_list() or []
         logger.info(f"腾讯视频电视剧列表获取完成，共获取到{len(qq_tv_list)}条信息")
 
-        # 获取优酷视频电视剧列表
-        logger.info("开始获取优酷视频电视剧列表")
-        youku_tv_list = self.get_youku_tv_list() or []
-        if len(youku_tv_list) == 0:
-            youku_tv_list = self.get_youku_tv_list() or []
-        logger.info(f"优酷视频电视剧列表获取完成，共获取到{len(youku_tv_list)}条信息")
-
-        # 获取爱奇艺视频电视剧列表
-        logger.info("开始获取爱奇艺视频电视剧列表")
-        iqiyi_tv_list = self.get_iqiyi_tv_list() or []
-        if len(iqiyi_tv_list) == 0:
-            iqiyi_tv_list = self.get_iqiyi_tv_list() or []
-        logger.info(f"爱奇艺视频电视剧列表获取完成，共获取到{len(iqiyi_tv_list)}条信息")
 
         # 合并三个列表并根据名字去重，优先保留有年份的
         all_tv_list = []
@@ -980,7 +981,7 @@ class autoSubscribe(_PluginBase):
                                         "props": {
                                             "type": "info",
                                             "variant": "tonal",
-                                            "text": "说明: 插件每天在凌晨0-6点随机时间运行一次，\n分别抓取指定数量个爱优腾的最新电视剧（如设置了100，则总共抓取300个电视剧），去重后根据本地媒体库是否存在，更新订阅状态或添加订阅。",
+                                            "text": "说明: 插件每天在凌晨0-6点随机时间运行一次，\n分别抓取指定数量个爱优腾的最新电视剧(如设置了100，则总共抓取300个电视剧，建议从10逐步增加到100就差不多了。别一开始直接拉满！一天添加1500个订阅)，\n去重后根据本地媒体库是否存在，更新订阅状态或添加订阅。",
                                             "style": {
                                                 "white-space": "pre-line",
                                                 "word-wrap": "break-word",
