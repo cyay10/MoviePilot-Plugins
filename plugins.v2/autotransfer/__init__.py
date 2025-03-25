@@ -459,7 +459,7 @@ class autoTransfer(_PluginBase):
                     # 如果返回值是 None，则跳过
                     if transfer_result is None:
                         logger.debug(
-                            f"处理文件 {file_path} 时，__handle_file 返回了 None，只要不是整理成功都是返回None"
+                            f"处理文件 {file_path} 时，__handle_file 返回了 None，只要不是整理成功都是返回None，跳过刮削"
                         )
                         continue
 
