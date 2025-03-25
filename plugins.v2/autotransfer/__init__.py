@@ -611,6 +611,9 @@ class autoTransfer(_PluginBase):
                 # 先通过文件路径来查
                 get_by_path_result = self.downloadhis.get_by_path(str(file_path))
                 if get_by_path_result is not None:
+                    logger.info(
+                        f"通过文件路径 {str(file_path)} 从历史下载记录中获取到tmdbid={get_by_path_result.tmdbid}，type={get_by_path_result.type}"
+                    )
                     file_meta = self.__update_file_meta(
                         file_path=str(file_path),
                         file_meta=file_meta,
@@ -638,10 +641,17 @@ class autoTransfer(_PluginBase):
                                 Path(parent_path).parent
                             )  # 获取父目录路径
 
+                        logger.info(
+                            f"通过文件父目录 {parent_path} 从历史下载记录中获取到tmdbid={get_by_path_result.tmdbid}，type={get_by_path_result.type}"
+                        )
                         file_meta = self.__update_file_meta(
                             file_path=str(file_path),
                             file_meta=file_meta,
                             get_by_path_result=get_by_path_result,
+                        )
+                    else:
+                        logger.info(
+                            f"通过文件路径 {str(file_path)} 从历史下载记录中没有获取到tmdbid和type，只能走正常识别流程"
                         )
 
                 # 判断文件大小
