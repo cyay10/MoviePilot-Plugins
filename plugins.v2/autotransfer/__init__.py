@@ -45,7 +45,7 @@ class autoTransfer(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/main/icons/autotransfer.png"
     # 插件版本
-    plugin_version = "1.0.21"
+    plugin_version = "1.0.22"
     # 插件作者
     plugin_author = "Dean"
     # 作者主页
@@ -485,6 +485,36 @@ class autoTransfer(_PluginBase):
                 f"插件{self.plugin_name} V{self.plugin_version} 运行失败，错误信息:{e}，traceback={traceback.format_exc()}"
             )
 
+    def __update_file_meta(
+        self, file_path: str, file_meta: Dict, get_by_path_result
+    ) -> Dict:
+        # 更新file_meta.tmdbid
+        file_meta.tmdbid = (
+            get_by_path_result.tmdbid
+            if file_meta.tmdbid is None
+            and get_by_path_result is not None
+            and get_by_path_result.tmdbid is not None
+            else file_meta.tmdbid
+        )
+
+        # 将字符串类型的get_by_path_result.type转换为MediaType中的类型
+        if (
+            get_by_path_result is not None
+            and get_by_path_result.type is not None
+            and get_by_path_result.type in MediaType._value2member_map_
+        ):
+            get_by_path_result.type = MediaType(get_by_path_result.type)
+
+        # 更新file_meta.type
+        file_meta.type = (
+            get_by_path_result.type
+            if file_meta.type.name != "TV"
+            and get_by_path_result is not None
+            and get_by_path_result.type is not None
+            else file_meta.type
+        )
+        return file_meta
+
     def __handle_file(self, event_path: str, mon_path: str):
         """
         同步一个文件
@@ -578,47 +608,41 @@ class autoTransfer(_PluginBase):
                     return
 
                 # 通过文件路径从历史下载记录中获取tmdbid和type
-                if str(file_path.parent) != mon_path:
-                    parent_path = str(file_path.parent)
-                    get_by_path_result = None
-
-                    # 尝试获取get_by_path_result，最多parent 3次
-                    for _ in range(3):
-                        # 如果父路径已经是mon_path了，就没意义了
-                        if parent_path == mon_path:
-                            break
-
-                        get_by_path_result = self.downloadhis.get_by_path(parent_path)
-                        if get_by_path_result is not None:
-                            break  # 找到结果，跳出循环
-
-                        parent_path = str(Path(parent_path).parent)  # 获取父目录路径
-
-                    # 更新file_meta.tmdbid
-                    file_meta.tmdbid = (
-                        get_by_path_result.tmdbid
-                        if file_meta.tmdbid is None
-                        and get_by_path_result is not None
-                        and get_by_path_result.tmdbid is not None
-                        else file_meta.tmdbid
+                # 先通过文件路径来查
+                get_by_path_result = self.downloadhis.get_by_path(str(file_path))
+                if get_by_path_result is not None:
+                    file_meta = self.__update_file_meta(
+                        file_path=str(file_path),
+                        file_meta=file_meta,
+                        get_by_path_result=get_by_path_result,
                     )
+                else:
+                    # 不行再通过文件父目录来查
+                    if str(file_path.parent) != mon_path:
+                        parent_path = str(file_path.parent)
+                        get_by_path_result = None
 
-                    # 将字符串类型的get_by_path_result.type转换为MediaType中的类型
-                    if (
-                        get_by_path_result is not None
-                        and get_by_path_result.type is not None
-                        and get_by_path_result.type in MediaType._value2member_map_
-                    ):
-                        get_by_path_result.type = MediaType(get_by_path_result.type)
+                        # 尝试获取get_by_path_result，最多parent 3次
+                        for _ in range(3):
+                            # 如果父路径已经是mon_path了，就没意义了
+                            if parent_path == mon_path:
+                                break
 
-                    # 更新file_meta.type
-                    file_meta.type = (
-                        get_by_path_result.type
-                        if file_meta.type is None
-                        and get_by_path_result is not None
-                        and get_by_path_result.type is not None
-                        else file_meta.type
-                    )
+                            get_by_path_result = self.downloadhis.get_by_path(
+                                parent_path
+                            )
+                            if get_by_path_result is not None:
+                                break  # 找到结果，跳出循环
+
+                            parent_path = str(
+                                Path(parent_path).parent
+                            )  # 获取父目录路径
+
+                        file_meta = self.__update_file_meta(
+                            file_path=str(file_path),
+                            file_meta=file_meta,
+                            get_by_path_result=get_by_path_result,
+                        )
 
                 # 判断文件大小
                 if (
