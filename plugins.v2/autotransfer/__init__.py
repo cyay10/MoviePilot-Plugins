@@ -376,7 +376,7 @@ class autoTransfer(_PluginBase):
                     )
                 else:
                     logger.info(
-                        f"下载器限速失败，请检查下载器 {', '.join(self._downloaders)} 的联通性，本次整理将跳过下载器限速"
+                        f"下载器限速失败，请检查下载器 {', '.join(self._downloaders)} 的连通性，本次整理将跳过下载器限速"
                     )
             else:
                 logger.info(
@@ -384,7 +384,7 @@ class autoTransfer(_PluginBase):
                 )
         except Exception as e:
             logger.error(
-                f"下载器限速失败，请检查下载器 {', '.join(self._downloaders)} 的联通性，本次整理将跳过下载器限速"
+                f"下载器限速失败，请检查下载器 {', '.join(self._downloaders)} 的连通性，本次整理将跳过下载器限速"
             )
             logger.debug(
                 f"下载器限速失败：{str(e)}, traceback={traceback.format_exc()}"
@@ -584,7 +584,7 @@ class autoTransfer(_PluginBase):
 
                     # 尝试获取get_by_path_result，最多parent 3次
                     for _ in range(3):
-                        # 如果父路径已经是mon_path了，就不再继续parent
+                        # 如果父路径已经是mon_path了，就没意义了
                         if parent_path == mon_path:
                             break
 
@@ -753,7 +753,7 @@ class autoTransfer(_PluginBase):
                             )
                     except Exception as e:
                         logger.error(
-                            f"下载器限速失败，请检查下载器 {', '.join(self._downloaders)} 的联通性，本次整理将跳过下载器限速"
+                            f"下载器限速失败，请检查下载器 {', '.join(self._downloaders)} 的连通性，本次整理将跳过下载器限速"
                         )
                         logger.debug(
                             f"下载器限速失败：{str(e)}, traceback={traceback.format_exc()}"
