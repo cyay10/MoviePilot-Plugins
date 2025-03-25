@@ -45,7 +45,7 @@ class autoTransfer(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/main/icons/autotransfer.png"
     # 插件版本
-    plugin_version = "1.0.20"
+    plugin_version = "1.0.21"
     # 插件作者
     plugin_author = "Dean"
     # 作者主页
@@ -452,6 +452,7 @@ class autoTransfer(_PluginBase):
                     logger.info(
                         f"开始处理文件({idx}/{len(list_files)}): {file_path} ..."
                     )
+
                     transfer_result = self.__handle_file(
                         event_path=str(file_path), mon_path=mon_path
                     )
@@ -575,6 +576,49 @@ class autoTransfer(_PluginBase):
                 if not file_meta.name:
                     logger.error(f"{file_path.name} 无法识别有效信息")
                     return
+
+                # 通过文件路径从历史下载记录中获取tmdbid和type
+                if str(file_path.parent) != mon_path:
+                    parent_path = str(file_path.parent)
+                    get_by_path_result = None
+
+                    # 尝试获取get_by_path_result，最多parent 3次
+                    for _ in range(3):
+                        # 如果父路径已经是mon_path了，就不再继续parent
+                        if parent_path == mon_path:
+                            break
+
+                        get_by_path_result = self.downloadhis.get_by_path(parent_path)
+                        if get_by_path_result is not None:
+                            break  # 找到结果，跳出循环
+
+                        parent_path = str(Path(parent_path).parent)  # 获取父目录路径
+
+                    # 更新file_meta.tmdbid
+                    file_meta.tmdbid = (
+                        get_by_path_result.tmdbid
+                        if file_meta.tmdbid is None
+                        and get_by_path_result is not None
+                        and get_by_path_result.tmdbid is not None
+                        else file_meta.tmdbid
+                    )
+
+                    # 将字符串类型的get_by_path_result.type转换为MediaType中的类型
+                    if (
+                        get_by_path_result is not None
+                        and get_by_path_result.type is not None
+                        and get_by_path_result.type in MediaType._value2member_map_
+                    ):
+                        get_by_path_result.type = MediaType(get_by_path_result.type)
+
+                    # 更新file_meta.type
+                    file_meta.type = (
+                        get_by_path_result.type
+                        if file_meta.type is None
+                        and get_by_path_result is not None
+                        and get_by_path_result.type is not None
+                        else file_meta.type
+                    )
 
                 # 判断文件大小
                 if (

@@ -3,11 +3,12 @@
     "name": "autoTransfer",
     "description": "类似v1的目录监控，可定期整理文件",
     "labels": "autoTransfer",
-    "version": "1.0.20",
+    "version": "1.0.21",
     "icon": "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/main/icons/autotransfer.png",
     "author": "Dean",
     "level": 1,
     "history": {
+      "v1.0.21": "feat: 添加从历史记录中获取文件元数据的功能",
       "v1.0.20": "fix: 不是整理成功时的返回值处理错误",
       "v1.0.19": "fix: 每处理完一集都要刮削全部 -> 处理完所有集才刮削一次全部",
       "v1.0.18": "调整界面布局和提示词",
