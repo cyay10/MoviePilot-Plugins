@@ -48,7 +48,7 @@ class autoTransfer(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/main/icons/autotransfer.png"
     # 插件版本
-    plugin_version = "1.0.29"
+    plugin_version = "1.0.30"
     # 插件作者
     plugin_author = "Dean"
     # 作者主页
@@ -991,53 +991,76 @@ class autoTransfer(_PluginBase):
         发送入库成功的消息
         """
         msg_title = f"{mediainfo.title_year} {meta.season_episode if not season_episode else season_episode} 已入库"
-        if bool(transferinfo.file_count == 1 and meta.title):  # 如果只有一个文件
+        if transferinfo.file_count == 1 and bool(meta.title):  # 如果只有一个文件
             msg_str = f"🎬 文件名: {meta.title}\n💾 大小: {transferinfo.total_size / 2**30 :.2f} GiB"
         else:
             msg_str = (
                 f"共{transferinfo.file_count}个视频\n"
                 f"💾 大小: {transferinfo.total_size / 2**30 :.2f} GiB"
             )
-        if mediainfo.category:
+        if hasattr(mediainfo, "category") and mediainfo.category:
             msg_str = (
                 f"{msg_str}\n📺 分类: {mediainfo.type.value} - {mediainfo.category}"
             )
         else:
             msg_str = f"{msg_str}\n📺 分类: {mediainfo.type.value}"
 
-        if mediainfo.tmdb_info["name"]:
-            msg_str = f"{msg_str}\n🇨🇳 中文片名: {mediainfo.tmdb_info['name']}"
-        if mediainfo.tmdb_info["original_name"]:
-            msg_str = f"{msg_str}\n🇬🇧 原始片名: {mediainfo.tmdb_info['original_name']}"
-        if mediainfo.tmdb_info["original_language"]:
-            msg_str = (
-                f"{msg_str}\n🗣 原始语言: {mediainfo.tmdb_info['original_language']}"
-            )
-        if mediainfo.tmdb_info["first_air_date"]:
-            msg_str = f"{msg_str}\n📅 首播日期: {mediainfo.tmdb_info['first_air_date']}"
+        if hasattr(mediainfo, "title") and mediainfo.title:
+            msg_str = f"{msg_str}\n🇨🇳 中文片名: {mediainfo.title}"
+        # 电影名字是title, release_date
+        # 电视剧名字是name, first_air_date
+        if (
+            mediainfo.type == MediaType.MOVIE
+            and hasattr(mediainfo, "original_title")
+            and bool(mediainfo.original_title)
+        ):
+            msg_str = f"{msg_str}\n🇬🇧 原始片名: {mediainfo.original_title}"
+        elif (
+            mediainfo.type == MediaType.TV
+            and hasattr(mediainfo, "name")
+            and bool(mediainfo.name)
+        ):
+            msg_str = f"{msg_str}\n🇬🇧 原始片名: {mediainfo.name}"
+        if hasattr(mediainfo, "original_language") and bool(
+            mediainfo.original_language
+        ):
+            msg_str = f"{msg_str}\n🗣 原始语言: {mediainfo.original_language}"
+        # 电影才有mediainfo.release_date?
+        if (
+            mediainfo.type == MediaType.MOVIE
+            and hasattr(mediainfo, "release_date")
+            and bool(mediainfo.release_date)
+        ):
+            msg_str = f"{msg_str}\n📅 首播日期: {mediainfo.release_date}"
+        # 电视剧才有first_air_date?
+        elif (
+            mediainfo.type == MediaType.TV
+            and hasattr(mediainfo, "first_air_date")
+            and bool(mediainfo.first_air_date)
+        ):
+            msg_str = f"{msg_str}\n📅 首播日期: {mediainfo.first_air_date}"
+
         if mediainfo.type == MediaType.TV and mediainfo.tmdb_info["last_air_date"]:
             msg_str = (
                 f"{msg_str}\n📅 最后播出日期: {mediainfo.tmdb_info['last_air_date']}"
             )
-        if mediainfo.tmdb_info["status"]:
+        if hasattr(mediainfo, "status") and bool(mediainfo.status):
             status_translation = {
                 "Returning Series": "回归系列",
                 "Ended": "已完结",
                 "In Production": "制作中",
                 "Canceled": "已取消",
                 "Planned": "计划中",
+                "Released": "已发布",
             }
 
-            status = mediainfo.tmdb_info["status"]
-            msg_str = f"{msg_str}\n✅ 完结状态: {status_translation[status] if status in status_translation else '未知状态'}"
-        if mediainfo.tmdb_info["vote_average"]:
-            msg_str = f"{msg_str}\n⭐ 观众评分: {mediainfo.tmdb_info['vote_average']}"
-        if len(mediainfo.tmdb_info["genres"]) != 0:
-            genres = ", ".join(
-                [genre["name"] for genre in mediainfo.tmdb_info["genres"]]
-            )
+            msg_str = f"{msg_str}\n✅ 完结状态: {status_translation[mediainfo.status] if mediainfo.status in status_translation else '未知状态'}"
+        if hasattr(mediainfo, "vote_average") and bool(mediainfo.vote_average):
+            msg_str = f"{msg_str}\n⭐ 观众评分: {mediainfo.vote_average}"
+        if hasattr(mediainfo, "genres") and bool(mediainfo.genres):
+            genres = ", ".join(genre["name"] for genre in mediainfo.genres)
             msg_str = f"{msg_str}\n🎭 类型: {genres}"
-        if mediainfo.overview:
+        if hasattr(mediainfo, "overview") and bool(mediainfo.overview):
             msg_str = f"{msg_str}\n📝 简介: {mediainfo.overview}"
         if transferinfo.message:
             msg_str = f"{msg_str}\n以下文件处理失败: \n{transferinfo.message}"
@@ -1126,7 +1149,9 @@ class autoTransfer(_PluginBase):
                             season_episode=season_episode,
                         )
                     except Exception as e:
-                        logger.error(f"发送消息失败: {str(e)}, traceback={traceback.format_exc()}")
+                        logger.error(
+                            f"发送消息失败: {str(e)}, traceback={traceback.format_exc()}"
+                        )
                         del self._medias[medis_title_year_season]
                 # 发送完消息，移出key
                 del self._medias[medis_title_year_season]
