@@ -48,7 +48,7 @@ class autoTransfer(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/main/icons/autotransfer.png"
     # 插件版本
-    plugin_version = "1.0.34"
+    plugin_version = "1.0.35"
     # 插件作者
     plugin_author = "Dean"
     # 作者主页
@@ -692,17 +692,16 @@ class autoTransfer(_PluginBase):
                         self.post_message(
                             mtype=NotificationType.Manual,
                             title=f"{file_path.name} 未识别到媒体信息，无法入库！\n"
-                            f"回复: ```\n/redo {his.id} [tmdbid]|[类型]\n``` 手动识别转移。",
                         )
-                        # 转移失败文件到指定目录
-                        if (
-                            self._pathAfterMoveFailure is not None
-                            and self._transfer_type == "move"
-                            and self._move_failed_files
-                        ):
-                            self.moveFailedFilesToPath(
-                                "未识别到媒体信息", file_item.path
-                            )
+                    # 转移失败文件到指定目录
+                    if (
+                        self._pathAfterMoveFailure is not None
+                        and self._transfer_type == "move"
+                        and self._move_failed_files
+                    ):
+                        self.moveFailedFilesToPath(
+                            "未识别到媒体信息", file_item.path
+                        )
                     return
 
                 # 如果未开启新增已入库媒体是否跟随TMDB信息变化则根据tmdbid查询之前的title

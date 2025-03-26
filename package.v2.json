@@ -3,11 +3,12 @@
     "name": "autoTransfer",
     "description": "类似v1的目录监控，可定期整理文件",
     "labels": "autoTransfer",
-    "version": "1.0.34",
+    "version": "1.0.35",
     "icon": "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/main/icons/autotransfer.png",
     "author": "Dean",
     "level": 1,
     "history": {
+      "v1.0.35": "fix: 转移失败文件到指定目录的代码位置放错了",
       "v1.0.34": "enchance: 更新语言映射",
       "v1.0.33": "fix: 电视剧的通知消息不显示原始片名",
       "v1.0.32": "feat: 修改入库成功消息，显示新文件名而非原文件名",
