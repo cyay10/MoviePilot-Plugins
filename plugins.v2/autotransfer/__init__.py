@@ -1,38 +1,41 @@
-import datetime
-import re
-import shutil
-import os
-import threading
 import traceback
-from pathlib import Path
-from typing import List, Tuple, Dict, Any, Optional
+import threading
+import shutil
+import re
 import pytz
-from apscheduler.schedulers.background import BackgroundScheduler
+import os
+import datetime
+from typing import List, Tuple, Dict, Any, Optional
+from pathlib import Path
 from apscheduler.triggers.cron import CronTrigger
-
-from app.chain.media import MediaChain
-from app.chain.storage import StorageChain
-from app.chain.tmdb import TmdbChain
-from app.chain.transfer import TransferChain
-from app.core.config import settings
-from app.core.context import MediaInfo
-from app.core.metainfo import MetaInfoPath
-from app.db.downloadhistory_oper import DownloadHistoryOper
-from app.db.transferhistory_oper import TransferHistoryOper
-from app.helper.directory import DirectoryHelper
-from app.log import logger
-from app.modules.filemanager import FileManagerModule
+from apscheduler.schedulers.background import BackgroundScheduler
+from app.utils.system import SystemUtils
+from app.utils.string import StringUtils
+from app.schemas.types import EventType, MediaType, SystemConfigKey
+from app.schemas import Notification
 from app.plugins import _PluginBase
+from app.modules.filemanager import FileManagerModule
+from app.log import logger
+from app.helper.downloader import DownloaderHelper
+from app.helper.directory import DirectoryHelper
+from app.db.transferhistory_oper import TransferHistoryOper
+from app.db.downloadhistory_oper import DownloadHistoryOper
+from app.core.metainfo import MetaInfoPath
+from app.core.meta import MetaBase
+from app.core.context import MediaInfo
+from app.core.config import settings
+from app.chain import ChainBase
+from app.chain.transfer import TransferChain
+from app.chain.tmdb import TmdbChain
+from app.chain.storage import StorageChain
+from app.chain.media import MediaChain
 from app.schemas import (
     NotificationType,
     TransferInfo,
     TransferDirectoryConf,
     ServiceInfo,
 )
-from app.schemas.types import EventType, MediaType, SystemConfigKey
-from app.utils.string import StringUtils
-from app.utils.system import SystemUtils
-from app.helper.downloader import DownloaderHelper
+
 
 lock = threading.Lock()
 
@@ -45,7 +48,7 @@ class autoTransfer(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/main/icons/autotransfer.png"
     # 插件版本
-    plugin_version = "1.0.23"
+    plugin_version = "1.0.24"
     # 插件作者
     plugin_author = "Dean"
     # 作者主页
@@ -61,10 +64,11 @@ class autoTransfer(_PluginBase):
     _scheduler = None
     transferhis = None
     downloadhis = None
-    transferchian = None
+    transferchain = None
     tmdbchain = None
+    mediaChain = None
     storagechain = None
-    _observer = []
+    chainbase = None
     _enabled = False
     _notify = False
     _onlyonce = False
@@ -79,7 +83,6 @@ class autoTransfer(_PluginBase):
     _pathAfterMoveFailure = None
     _cron = None
     filetransfer = None
-    mediaChain = None
     _size = 0
     # 取消限速开关
     _pre_cancel_speed_limit = False
@@ -102,10 +105,11 @@ class autoTransfer(_PluginBase):
     def init_plugin(self, config: dict = None):
         self.transferhis = TransferHistoryOper()
         self.downloadhis = DownloadHistoryOper()
-        self.transferchian = TransferChain()
+        self.transferchain = TransferChain()
         self.tmdbchain = TmdbChain()
         self.mediaChain = MediaChain()
         self.storagechain = StorageChain()
+        self.chainbase = ChainBase()
         self.filetransfer = FileManagerModule()
         self.downloader_helper = DownloaderHelper()
         # 清空配置
@@ -974,6 +978,48 @@ class autoTransfer(_PluginBase):
             logger.error(f"目录监控发生错误：{str(e)} - {traceback.format_exc()}")
             return
 
+    def send_transfer_message(
+        self,
+        meta: MetaBase,
+        mediainfo: MediaInfo,
+        transferinfo: TransferInfo,
+        season_episode: Optional[str] = None,
+        username: Optional[str] = None,
+    ):
+        """
+        发送入库成功的消息
+        """
+        msg_title = f"{mediainfo.title_year} {meta.season_episode if not season_episode else season_episode} 已入库"
+
+        if mediainfo.category:
+            msg_str = f"分类: {mediainfo.type.value} - {mediainfo.category}"
+        else:
+            msg_str = f"分类: {mediainfo.type.value}"
+
+        # 如果只有一个文件
+        if transferinfo.file_count == 1 and meta.title:
+            msg_str = f"{msg_str}\n文件名: {meta.title}\n大小: {StringUtils.str_filesize(transferinfo.total_size)}"
+        else:
+            msg_str = (
+                f"{msg_str}\n共{transferinfo.file_count}个文件\n"
+                f"大小：{StringUtils.str_filesize(transferinfo.total_size)}"
+            )
+        if mediainfo.overview:
+            msg_str = f"{msg_str}\n简介: {mediainfo.overview}"
+        if transferinfo.message:
+            msg_str = f"{msg_str}\n以下文件处理失败: \n{transferinfo.message}"
+        # 发送
+        self.chainbase.post_message(
+            Notification(
+                mtype=NotificationType.Organize,
+                title=msg_title,
+                text=msg_str,
+                image=mediainfo.get_message_image(),
+                username=username,
+                link=mediainfo.detail_link,
+            )
+        )
+
     def send_msg(self):
         """
         定时检查是否有媒体处理完，发送统一消息
@@ -1033,7 +1079,13 @@ class autoTransfer(_PluginBase):
                             f"{file_meta.season} {StringUtils.format_ep(episodes)}"
                         )
                     # 发送消息
-                    self.transferchian.send_transfer_message(
+                    # self.transferchain.send_transfer_message(
+                    #     meta=file_meta,
+                    #     mediainfo=mediainfo,
+                    #     transferinfo=transferinfo,
+                    #     season_episode=season_episode,
+                    # )
+                    self.send_transfer_message(
                         meta=file_meta,
                         mediainfo=mediainfo,
                         transferinfo=transferinfo,
