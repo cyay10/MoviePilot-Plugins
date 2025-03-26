@@ -45,7 +45,7 @@ class autoTransfer(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/main/icons/autotransfer.png"
     # 插件版本
-    plugin_version = "1.0.22"
+    plugin_version = "1.0.23"
     # 插件作者
     plugin_author = "Dean"
     # 作者主页
@@ -450,7 +450,7 @@ class autoTransfer(_PluginBase):
                 # 遍历目录下所有文件
                 for idx, file_path in enumerate(list_files, start=1):
                     logger.info(
-                        f"开始处理文件({idx}/{len(list_files)}): {file_path} ..."
+                        f"开始处理文件({idx}/{len(list_files)}) ({file_path.stat().st_size / 2**30:.2f} GiB): {file_path}"
                     )
 
                     transfer_result = self.__handle_file(
@@ -529,7 +529,7 @@ class autoTransfer(_PluginBase):
             with lock:
                 transfer_history = self.transferhis.get_by_src(event_path)
                 if transfer_history:
-                    logger.info("文件已处理过：%s" % event_path)
+                    logger.info(f"文件已处理过: {event_path}")
                     return
 
                 # 回收站及隐藏的文件不处理
@@ -568,7 +568,7 @@ class autoTransfer(_PluginBase):
                         if not keyword:
                             continue
                         if keyword and re.search(
-                            r"%s" % keyword, event_path, re.IGNORECASE
+                            f"{keyword}", event_path, re.IGNORECASE
                         ):
                             logger.info(
                                 f"{event_path} 命中整理屏蔽词 {keyword}，不处理"
@@ -594,7 +594,7 @@ class autoTransfer(_PluginBase):
                     blurray_dir = event_path[: event_path.find("BDMV")]
                     file_path = Path(blurray_dir)
                     logger.info(
-                        f"{event_path} 是蓝光目录，更正文件路径为：{str(file_path)}"
+                        f"{event_path} 是蓝光目录，更正文件路径为: {str(file_path)}"
                     )
                     # 查询历史记录，已转移的不处理
                     if self.transferhis.get_by_src(str(file_path)):
@@ -651,7 +651,7 @@ class autoTransfer(_PluginBase):
                         )
                     else:
                         logger.info(
-                            f"通过文件路径 {str(file_path)} 从历史下载记录中没有获取到tmdbid和type，只能走正常识别流程"
+                            f"未从历史下载记录中获取到 {str(file_path)} 的tmdbid和type，只能走正常识别流程"
                         )
 
                 # 判断文件大小
@@ -678,7 +678,7 @@ class autoTransfer(_PluginBase):
                 # 识别媒体信息
                 mediainfo: MediaInfo = self.chain.recognize_media(meta=file_meta)
                 if not mediainfo:
-                    logger.warn(f"未识别到媒体信息，标题：{file_meta.name}")
+                    logger.warn(f"未识别到媒体信息，标题: {file_meta.name}")
                     # 新增转移成功历史记录
                     his = self.transferhis.add_fail(
                         fileitem=file_item, mode=transfer_type, meta=file_meta
@@ -971,7 +971,7 @@ class autoTransfer(_PluginBase):
                 return transferinfo, mediainfo, file_meta
 
         except Exception as e:
-            logger.error("目录监控发生错误：%s - %s" % (str(e), traceback.format_exc()))
+            logger.error(f"目录监控发生错误：{str(e)} - {traceback.format_exc()}")
             return
 
     def send_msg(self):
