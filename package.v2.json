@@ -3,11 +3,12 @@
     "name": "autoTransfer",
     "description": "类似v1的目录监控，可定期整理文件",
     "labels": "autoTransfer",
-    "version": "1.0.25",
+    "version": "1.0.27",
     "icon": "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/main/icons/autotransfer.png",
     "author": "Dean",
     "level": 1,
     "history": {
+      "v1.0.27": "test: 错误捕获",
       "v1.0.26": "style: 输出格式微调",
       "v1.0.25": "fix: 未从历史下载记录中获取到信息时的异常报错 enchance: 整理完成输出通知美化",
       "v1.0.24": "refactor: 修改发送通知消息的格式",

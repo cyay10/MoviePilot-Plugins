@@ -48,7 +48,7 @@ class autoTransfer(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/main/icons/autotransfer.png"
     # 插件版本
-    plugin_version = "1.0.26"
+    plugin_version = "1.0.27"
     # 插件作者
     plugin_author = "Dean"
     # 作者主页
@@ -1118,12 +1118,15 @@ class autoTransfer(_PluginBase):
                     #     transferinfo=transferinfo,
                     #     season_episode=season_episode,
                     # )
-                    self.send_transfer_message(
-                        meta=file_meta,
-                        mediainfo=mediainfo,
-                        transferinfo=transferinfo,
-                        season_episode=season_episode,
-                    )
+                    try:
+                        self.send_transfer_message(
+                            meta=file_meta,
+                            mediainfo=mediainfo,
+                            transferinfo=transferinfo,
+                            season_episode=season_episode,
+                        )
+                    except Exception as e:
+                        logger.error(f"发送消息失败: {str(e)}, traceback={traceback.format_exc()}")
                 # 发送完消息，移出key
                 del self._medias[medis_title_year_season]
                 continue
