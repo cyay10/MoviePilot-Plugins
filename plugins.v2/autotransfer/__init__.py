@@ -48,7 +48,7 @@ class autoTransfer(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/main/icons/autotransfer.png"
     # 插件版本
-    plugin_version = "1.0.32"
+    plugin_version = "1.0.33"
     # 插件作者
     plugin_author = "Dean"
     # 作者主页
@@ -1017,10 +1017,10 @@ class autoTransfer(_PluginBase):
             msg_str = f"{msg_str}\n🇬🇧 原始片名: {mediainfo.original_title}"
         elif (
             mediainfo.type == MediaType.TV
-            and hasattr(mediainfo, "name")
-            and bool(mediainfo.name)
+            and hasattr(mediainfo, "original_name")
+            and bool(mediainfo.original_name)
         ):
-            msg_str = f"{msg_str}\n🇬🇧 原始片名: {mediainfo.name}"
+            msg_str = f"{msg_str}\n🇬🇧 原始片名: {mediainfo.original_name}"
         if hasattr(mediainfo, "original_language") and bool(
             mediainfo.original_language
         ):
