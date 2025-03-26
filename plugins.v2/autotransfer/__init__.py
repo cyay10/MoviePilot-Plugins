@@ -48,7 +48,7 @@ class autoTransfer(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/main/icons/autotransfer.png"
     # 插件版本
-    plugin_version = "1.0.31"
+    plugin_version = "1.0.32"
     # 插件作者
     plugin_author = "Dean"
     # 作者主页
@@ -991,8 +991,8 @@ class autoTransfer(_PluginBase):
         发送入库成功的消息
         """
         msg_title = f"{mediainfo.title_year} {meta.season_episode if not season_episode else season_episode} 已入库"
-        if transferinfo.file_count == 1 and bool(meta.title):  # 如果只有一个文件
-            msg_str = f"🎬 文件名: {meta.title}\n💾 大小: {transferinfo.total_size / 2**30 :.2f} GiB"
+        if transferinfo.file_count == 1 and bool(meta.title) and bool(transferinfo.file_list_new[0]):  # 如果只有一个文件
+            msg_str = f"🎬 文件名: {os.path.basename(transferinfo.file_list_new[0])}\n💾 大小: {transferinfo.total_size / 2**30 :.2f} GiB"
         else:
             msg_str = (
                 f"共{transferinfo.file_count}个视频\n"
