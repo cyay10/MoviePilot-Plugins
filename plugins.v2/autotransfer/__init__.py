@@ -48,7 +48,7 @@ class autoTransfer(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/main/icons/autotransfer.png"
     # 插件版本
-    plugin_version = "1.0.25"
+    plugin_version = "1.0.26"
     # 插件作者
     plugin_author = "Dean"
     # 作者主页
@@ -391,7 +391,7 @@ class autoTransfer(_PluginBase):
                 f"下载器限速失败，请检查下载器 {', '.join(self._downloaders)} 的连通性，本次整理将跳过下载器限速"
             )
             logger.debug(
-                f"下载器限速失败：{str(e)}, traceback={traceback.format_exc()}"
+                f"下载器限速失败: {str(e)}, traceback={traceback.format_exc()}"
             )
             is_download_speed_limited = False
 
@@ -692,7 +692,7 @@ class autoTransfer(_PluginBase):
                         self.post_message(
                             mtype=NotificationType.Manual,
                             title=f"{file_path.name} 未识别到媒体信息，无法入库！\n"
-                            f"回复：```\n/redo {his.id} [tmdbid]|[类型]\n``` 手动识别转移。",
+                            f"回复: ```\n/redo {his.id} [tmdbid]|[类型]\n``` 手动识别转移。",
                         )
                         # 转移失败文件到指定目录
                         if (
@@ -713,7 +713,7 @@ class autoTransfer(_PluginBase):
                     if transfer_history:
                         mediainfo.title = transfer_history.title
                 logger.info(
-                    f"{file_path.name} 识别为：{mediainfo.type.value} {mediainfo.title_year}"
+                    f"{file_path.name} 识别为: {mediainfo.type.value} {mediainfo.title_year}"
                 )
 
                 # 获取集数据
@@ -795,7 +795,7 @@ class autoTransfer(_PluginBase):
                             f"下载器限速失败，请检查下载器 {', '.join(self._downloaders)} 的连通性，本次整理将跳过下载器限速"
                         )
                         logger.debug(
-                            f"下载器限速失败：{str(e)}, traceback={traceback.format_exc()}"
+                            f"下载器限速失败: {str(e)}, traceback={traceback.format_exc()}"
                         )
                         is_download_speed_limited = False
 
@@ -839,7 +839,7 @@ class autoTransfer(_PluginBase):
 
                 if not transferinfo.success:
                     # 转移失败
-                    logger.warn(f"{file_path.name} 入库失败：{transferinfo.message}")
+                    logger.warn(f"{file_path.name} 入库失败: {transferinfo.message}")
 
                     if self._history:
                         # 新增转移失败历史记录
@@ -854,7 +854,7 @@ class autoTransfer(_PluginBase):
                         self.post_message(
                             mtype=NotificationType.Manual,
                             title=f"{mediainfo.title_year}{file_meta.season_episode} 入库失败！",
-                            text=f"原因：{transferinfo.message or '未知'}",
+                            text=f"原因: {transferinfo.message or '未知'}",
                             image=mediainfo.get_message_image(),
                         )
                     # 转移失败文件到指定目录
@@ -969,14 +969,14 @@ class autoTransfer(_PluginBase):
                             file_dir, settings.RMT_MEDIAEXT + settings.DOWNLOAD_TMPEXT
                         )
                         if not files:
-                            logger.warn(f"移动模式，删除空目录：{file_dir}")
+                            logger.warn(f"移动模式，删除空目录: {file_dir}")
                             shutil.rmtree(file_dir, ignore_errors=True)
 
                 # 返回成功的文件
                 return transferinfo, mediainfo, file_meta
 
         except Exception as e:
-            logger.error(f"目录监控发生错误：{str(e)} - {traceback.format_exc()}")
+            logger.error(f"目录监控发生错误: {str(e)} - {traceback.format_exc()}")
             return
 
     def send_transfer_message(
@@ -991,20 +991,20 @@ class autoTransfer(_PluginBase):
         发送入库成功的消息
         """
         msg_title = f"{mediainfo.title_year} {meta.season_episode if not season_episode else season_episode} 已入库"
-
-        if mediainfo.category:
-            msg_str = f"📺 分类: {mediainfo.type.value} - {mediainfo.category}"
-        else:
-            msg_str = f"📺 分类: {mediainfo.type.value}"
-
-        # 如果只有一个文件
-        if transferinfo.file_count == 1 and meta.title:
-            msg_str = f"{msg_str}\n🎬 文件名: {meta.title}\n💾 大小: {StringUtils.str_filesize(transferinfo.total_size)}"
+        if bool(transferinfo.file_count == 1 and meta.title):  # 如果只有一个文件
+            msg_str = f"{msg_str}\n🎬 文件名: {meta.title}\n💾 大小: {transferinfo.total_size / 2**30 :.2f} GiB"
         else:
             msg_str = (
-                f"{msg_str}\n共{transferinfo.file_count}个文件\n"
-                f"💾 大小：{StringUtils.str_filesize(transferinfo.total_size)}"
+                f"共{transferinfo.file_count}个视频\n"
+                f"💾 大小: {transferinfo.total_size / 2**30 :.2f} GiB"
             )
+        if mediainfo.category:
+            msg_str = (
+                f"{msg_str}\n📺 分类: {mediainfo.type.value} - {mediainfo.category}"
+            )
+        else:
+            msg_str = f"{msg_str}\n📺 分类: {mediainfo.type.value}"
+
         if mediainfo.tmdb_info["name"]:
             msg_str = f"{msg_str}\n🇨🇳 中文片名: {mediainfo.tmdb_info['name']}"
         if mediainfo.tmdb_info["original_name"]:
@@ -1014,7 +1014,7 @@ class autoTransfer(_PluginBase):
                 f"{msg_str}\n🗣 原始语言: {mediainfo.tmdb_info['original_language']}"
             )
         if mediainfo.tmdb_info["first_air_date"]:
-            msg_str = f"{msg_str}\n📅 首发日期: {mediainfo.tmdb_info['first_air_date']}"
+            msg_str = f"{msg_str}\n📅 首播日期: {mediainfo.tmdb_info['first_air_date']}"
         if mediainfo.type == MediaType.TV and mediainfo.tmdb_info["last_air_date"]:
             msg_str = (
                 f"{msg_str}\n📅 最后播出日期: {mediainfo.tmdb_info['last_air_date']}"
@@ -1144,7 +1144,7 @@ class autoTransfer(_PluginBase):
         [{
             "id": "服务ID",
             "name": "服务名称",
-            "trigger": "触发器：cron/interval/date/CronTrigger.from_crontab()",
+            "trigger": "触发器: cron/interval/date/CronTrigger.from_crontab()",
             "func": self.xxx,
             "kwargs": {} # 定时器参数
         }]
