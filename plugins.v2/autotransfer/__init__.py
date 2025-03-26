@@ -48,7 +48,7 @@ class autoTransfer(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/main/icons/autotransfer.png"
     # 插件版本
-    plugin_version = "1.0.30"
+    plugin_version = "1.0.31"
     # 插件作者
     plugin_author = "Dean"
     # 作者主页
@@ -998,14 +998,14 @@ class autoTransfer(_PluginBase):
                 f"共{transferinfo.file_count}个视频\n"
                 f"💾 大小: {transferinfo.total_size / 2**30 :.2f} GiB"
             )
-        if hasattr(mediainfo, "category") and mediainfo.category:
+        if hasattr(mediainfo, "category") and bool(mediainfo.category):
             msg_str = (
                 f"{msg_str}\n📺 分类: {mediainfo.type.value} - {mediainfo.category}"
             )
         else:
             msg_str = f"{msg_str}\n📺 分类: {mediainfo.type.value}"
 
-        if hasattr(mediainfo, "title") and mediainfo.title:
+        if hasattr(mediainfo, "title") and bool(mediainfo.title):
             msg_str = f"{msg_str}\n🇨🇳 中文片名: {mediainfo.title}"
         # 电影名字是title, release_date
         # 电视剧名字是name, first_air_date
@@ -1040,7 +1040,9 @@ class autoTransfer(_PluginBase):
         ):
             msg_str = f"{msg_str}\n📅 首播日期: {mediainfo.first_air_date}"
 
-        if mediainfo.type == MediaType.TV and mediainfo.tmdb_info["last_air_date"]:
+        if mediainfo.type == MediaType.TV and bool(
+            mediainfo.tmdb_info["last_air_date"]
+        ):
             msg_str = (
                 f"{msg_str}\n📅 最后播出日期: {mediainfo.tmdb_info['last_air_date']}"
             )
@@ -1062,7 +1064,7 @@ class autoTransfer(_PluginBase):
             msg_str = f"{msg_str}\n🎭 类型: {genres}"
         if hasattr(mediainfo, "overview") and bool(mediainfo.overview):
             msg_str = f"{msg_str}\n📝 简介: {mediainfo.overview}"
-        if transferinfo.message:
+        if bool(transferinfo.message):
             msg_str = f"{msg_str}\n以下文件处理失败: \n{transferinfo.message}"
         # 发送
         self.chainbase.post_message(

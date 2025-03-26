@@ -3,11 +3,12 @@
     "name": "autoTransfer",
     "description": "类似v1的目录监控，可定期整理文件",
     "labels": "autoTransfer",
-    "version": "1.0.30",
+    "version": "1.0.31",
     "icon": "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/main/icons/autotransfer.png",
     "author": "Dean",
     "level": 1,
     "history": {
+      "v1.0.31": "refactor: 使用bool显式检查属性值",
       "v1.0.30": "enhance: 优化消息生成逻辑并修复属性检查",
       "v1.0.29": "enhance: 防止发送消息意外失败后一直重试",
       "v1.0.28": "fix: cannot access local variable 'msg_str' where it is not associated with a value",
