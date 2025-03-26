@@ -96,7 +96,7 @@ class autoSubscribe(_PluginBase):
             if self._onlyonce:
                 # 定时服务
                 self._scheduler = BackgroundScheduler(timezone=settings.TZ)
-                logger.info("运行一次autoSubscribe")
+                logger.info("立即运行一次")
                 # 运行一次定时服务
                 self._scheduler.add_job(
                     func=self.main,
