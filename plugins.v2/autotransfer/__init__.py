@@ -48,7 +48,7 @@ class autoTransfer(_PluginBase):
     # 插件图标
     plugin_icon = "https://raw.githubusercontent.com/BrettDean/MoviePilot-Plugins/main/icons/autotransfer.png"
     # 插件版本
-    plugin_version = "1.0.24"
+    plugin_version = "1.0.25"
     # 插件作者
     plugin_author = "Dean"
     # 作者主页
@@ -638,21 +638,22 @@ class autoTransfer(_PluginBase):
                             get_by_path_result = self.downloadhis.get_by_path(
                                 parent_path
                             )
-                            if get_by_path_result is not None:
+                            if get_by_path_result:
                                 break  # 找到结果，跳出循环
 
                             parent_path = str(
                                 Path(parent_path).parent
                             )  # 获取父目录路径
 
-                        logger.info(
-                            f"通过文件父目录 {parent_path} 从历史下载记录中获取到tmdbid={get_by_path_result.tmdbid}，type={get_by_path_result.type}"
-                        )
-                        file_meta = self.__update_file_meta(
-                            file_path=str(file_path),
-                            file_meta=file_meta,
-                            get_by_path_result=get_by_path_result,
-                        )
+                        if get_by_path_result:
+                            logger.info(
+                                f"通过文件父目录 {parent_path} 从历史下载记录中获取到tmdbid={get_by_path_result.tmdbid}，type={get_by_path_result.type}"
+                            )
+                            file_meta = self.__update_file_meta(
+                                file_path=str(file_path),
+                                file_meta=file_meta,
+                                get_by_path_result=get_by_path_result,
+                            )
                     else:
                         logger.info(
                             f"未从历史下载记录中获取到 {str(file_path)} 的tmdbid和type，只能走正常识别流程"
@@ -992,20 +993,52 @@ class autoTransfer(_PluginBase):
         msg_title = f"{mediainfo.title_year} {meta.season_episode if not season_episode else season_episode} 已入库"
 
         if mediainfo.category:
-            msg_str = f"分类: {mediainfo.type.value} - {mediainfo.category}"
+            msg_str = f"📺 分类: {mediainfo.type.value} - {mediainfo.category}"
         else:
-            msg_str = f"分类: {mediainfo.type.value}"
+            msg_str = f"📺 分类: {mediainfo.type.value}"
 
         # 如果只有一个文件
         if transferinfo.file_count == 1 and meta.title:
-            msg_str = f"{msg_str}\n文件名: {meta.title}\n大小: {StringUtils.str_filesize(transferinfo.total_size)}"
+            msg_str = f"{msg_str}\n🎬 文件名: {meta.title}\n💾 大小: {StringUtils.str_filesize(transferinfo.total_size)}"
         else:
             msg_str = (
                 f"{msg_str}\n共{transferinfo.file_count}个文件\n"
-                f"大小：{StringUtils.str_filesize(transferinfo.total_size)}"
+                f"💾 大小：{StringUtils.str_filesize(transferinfo.total_size)}"
             )
+        if mediainfo.tmdb_info["name"]:
+            msg_str = f"{msg_str}\n🇨🇳 中文片名: {mediainfo.tmdb_info['name']}"
+        if mediainfo.tmdb_info["original_name"]:
+            msg_str = f"{msg_str}\n🇬🇧 原始片名: {mediainfo.tmdb_info['original_name']}"
+        if mediainfo.tmdb_info["original_language"]:
+            msg_str = (
+                f"{msg_str}\n🗣 原始语言: {mediainfo.tmdb_info['original_language']}"
+            )
+        if mediainfo.tmdb_info["first_air_date"]:
+            msg_str = f"{msg_str}\n📅 首发日期: {mediainfo.tmdb_info['first_air_date']}"
+        if mediainfo.type == MediaType.TV and mediainfo.tmdb_info["last_air_date"]:
+            msg_str = (
+                f"{msg_str}\n📅 最后播出日期: {mediainfo.tmdb_info['last_air_date']}"
+            )
+        if mediainfo.tmdb_info["status"]:
+            status_translation = {
+                "Returning Series": "回归系列",
+                "Ended": "已完结",
+                "In Production": "制作中",
+                "Canceled": "已取消",
+                "Planned": "计划中",
+            }
+
+            status = mediainfo.tmdb_info["status"]
+            msg_str = f"{msg_str}\n✅ 完结状态: {status_translation[status] if status in status_translation else '未知状态'}"
+        if mediainfo.tmdb_info["vote_average"]:
+            msg_str = f"{msg_str}\n⭐ 观众评分: {mediainfo.tmdb_info['vote_average']}"
+        if len(mediainfo.tmdb_info["genres"]) != 0:
+            genres = ", ".join(
+                [genre["name"] for genre in mediainfo.tmdb_info["genres"]]
+            )
+            msg_str = f"{msg_str}\n🎭 类型: {genres}"
         if mediainfo.overview:
-            msg_str = f"{msg_str}\n简介: {mediainfo.overview}"
+            msg_str = f"{msg_str}\n📝 简介: {mediainfo.overview}"
         if transferinfo.message:
             msg_str = f"{msg_str}\n以下文件处理失败: \n{transferinfo.message}"
         # 发送
