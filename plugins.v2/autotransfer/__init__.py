@@ -214,7 +214,7 @@ class autoTransfer(_PluginBase):
 
             # 运行一次定时服务
             if self._onlyonce:
-                logger.info("autotransfer整理文件，立即运行一次")
+                logger.info("立即运行一次")
                 self._scheduler.add_job(
                     name="autotransfer整理文件",
                     func=self.main,
